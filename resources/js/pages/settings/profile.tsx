@@ -1,9 +1,8 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Transition } from '@headlessui/react';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { FormEventHandler } from 'react';
 
-import DeleteUser from '@/components/delete-user';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -18,102 +17,96 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/settings/profile',
     },
 ];
-
-export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
+export default function Profile() {
     const { auth } = usePage<SharedData>().props;
+    const user = auth.user as any;
+    const isAdmin = user.role === 'admin'; // Cek apakah dia admin
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
-        name: auth.user.name,
-        email: auth.user.email,
+        nama: user.nama,
+        kelas: user.kelas || '',
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
-
-        patch(route('profile.update'));
+        if (isAdmin) {
+            patch(route('profile.update'));
+        }
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Profile settings" />
+            <Head title="Profil Saya" />
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall title="Profile information" description="Update your name and email address" />
+                    <HeadingSmall 
+                        title="Informasi Akun" 
+                        description={isAdmin ? "Perbarui informasi profil Anda." : "Data profil Anda yang terdaftar di sistem."} 
+                    />
 
                     <form onSubmit={submit} className="space-y-6">
+                        {/* NIS - Selalu Disabled untuk siapapun */}
                         <div className="grid gap-2">
-                            <Label htmlFor="name">Name</Label>
-
+                            <Label htmlFor="nis">Nomor Induk Siswa (NIS)</Label>
                             <Input
-                                id="name"
-                                className="mt-1 block w-full"
-                                value={data.name}
-                                onChange={(e) => setData('name', e.target.value)}
-                                required
-                                autoComplete="name"
-                                placeholder="Full name"
+                                id="nis"
+                                className="mt-1 block w-full bg-gray-100"
+                                value={user.nis}
+                                disabled
                             />
-
-                            <InputError className="mt-2" message={errors.name} />
                         </div>
 
+                        {/* NAMA - Disabled jika bukan Admin */}
                         <div className="grid gap-2">
-                            <Label htmlFor="email">Email address</Label>
-
+                            <Label htmlFor="nama">Nama Lengkap</Label>
                             <Input
-                                id="email"
-                                type="email"
-                                className="mt-1 block w-full"
-                                value={data.email}
-                                onChange={(e) => setData('email', e.target.value)}
+                                id="nama"
+                                className={`mt-1 block w-full ${!isAdmin ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+                                value={data.nama}
+                                onChange={(e) => setData('nama', e.target.value)}
+                                disabled={!isAdmin} // Kunci jika bukan admin
                                 required
-                                autoComplete="username"
-                                placeholder="Email address"
                             />
-
-                            <InputError className="mt-2" message={errors.email} />
+                            <InputError className="mt-2" message={errors.nama} />
                         </div>
 
-                        {mustVerifyEmail && auth.user.email_verified_at === null && (
-                            <div>
-                                <p className="mt-2 text-sm text-neutral-800">
-                                    Your email address is unverified.
-                                    <Link
-                                        href={route('verification.send')}
-                                        method="post"
-                                        as="button"
-                                        className="rounded-md text-sm text-neutral-600 underline hover:text-neutral-900 focus:ring-2 focus:ring-offset-2 focus:outline-hidden"
-                                    >
-                                        Click here to re-send the verification email.
-                                    </Link>
-                                </p>
-
-                                {status === 'verification-link-sent' && (
-                                    <div className="mt-2 text-sm font-medium text-green-600">
-                                        A new verification link has been sent to your email address.
-                                    </div>
-                                )}
+                        {/* KELAS - Hanya muncul untuk siswa & Locked */}
+                        {user.role === 'siswa' && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="kelas">Kelas</Label>
+                                <Input
+                                    id="kelas"
+                                    className="mt-1 block w-full bg-gray-50 cursor-not-allowed"
+                                    value={data.kelas}
+                                    disabled={true} // Selalu kunci untuk siswa
+                                />
                             </div>
                         )}
 
-                        <div className="flex items-center gap-4">
-                            <Button disabled={processing}>Save</Button>
-
-                            <Transition
-                                show={recentlySuccessful}
-                                enter="transition ease-in-out"
-                                enterFrom="opacity-0"
-                                leave="transition ease-in-out"
-                                leaveTo="opacity-0"
-                            >
-                                <p className="text-sm text-neutral-600">Saved</p>
-                            </Transition>
-                        </div>
+                        {/* TAMPILKAN TOMBOL HANYA UNTUK ADMIN */}
+                        {isAdmin ? (
+                            <div className="flex items-center gap-4">
+                                <Button disabled={processing}>Simpan Perubahan</Button>
+                                <Transition
+                                    show={recentlySuccessful}
+                                    enter="transition ease-in-out"
+                                    enterFrom="opacity-0"
+                                    leave="transition ease-in-out"
+                                    leaveTo="opacity-0"
+                                >
+                                    <p className="text-sm text-neutral-600">Berhasil disimpan.</p>
+                                </Transition>
+                            </div>
+                        ) : (
+                            <div className="p-4 bg-amber-50 border-l-4 border-amber-400 rounded">
+                                <p className="text-xs text-amber-700 font-medium">
+                                    Informasi: Perubahan data diri hanya dapat dilakukan melalui Admin atau Petugas Tata Usaha.
+                                </p>
+                            </div>
+                        )}
                     </form>
                 </div>
-
-                <DeleteUser />
             </SettingsLayout>
         </AppLayout>
     );

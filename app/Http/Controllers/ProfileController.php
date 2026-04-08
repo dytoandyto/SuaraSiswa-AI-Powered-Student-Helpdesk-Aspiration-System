@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\ProfileUpdateRequest;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class ProfileController extends Controller
+{
+    // Menampilkan halaman profil
+    public function edit(Request $request): Response
+    {
+        return Inertia::render('Profile/Edit', [
+            'status' => session('status'),
+        ]);
+    }
+
+    // Update data dasar (Nama & Kelas)
+    public function update(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        // Jika Siswa mencoba update profil, tolak laporannya
+        if ($user->role !== 'admin') {
+            return redirect()->back()->with('error', 'Hanya admin yang dapat mengubah profil.');
+        }
+
+        $request->validate([
+            'nama' => 'required|string|max:255',
+            // Tambahkan validasi lain jika perlu
+        ]);
+
+        $user->update($request->only('nama'));
+
+        return redirect()->back()->with('message', 'Profil berhasil diperbarui!');
+    }
+
+    // Update Password (Poin Plus Keamanan)
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+
+        $request->user()->update([
+            'password' => bcrypt($validated['password']),
+        ]);
+
+        return redirect()->back()->with('message', 'Password berhasil diganti!');
+    }
+}

@@ -12,11 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('siswa', function (Blueprint $table) {
-          $table->id(); 
+            $table->id();
             // NIS (Sesuai soal int 10, tapi biasanya string lebih aman untuk angka unik)
-            $table->string('nis', 10)->unique(); 
+            $table->string('nis', 10)->unique();
             $table->string('nama', 100);
             $table->string('kelas', 10);
+            $table->enum('role', ['admin', 'siswa'])->default('siswa'); // Penentu hak akses
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

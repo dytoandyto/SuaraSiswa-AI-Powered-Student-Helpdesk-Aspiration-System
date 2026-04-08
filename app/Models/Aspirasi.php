@@ -13,10 +13,15 @@ class Aspirasi extends Model
     protected $primaryKey = 'id_aspirasi';
 
     protected $fillable = [
+        'judul',
         'nis',
         'id_kategori',
+        'kategori_manual',
         'lokasi',
+        'tujuan',
+        'tanggal_kejadian',
         'ket',
+        'lampiran',
         'status',
         'feedback',
     ];

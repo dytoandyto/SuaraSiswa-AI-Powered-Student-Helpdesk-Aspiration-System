@@ -2,31 +2,27 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable; // WAJIB INI
 use Illuminate\Notifications\Notifiable;
 
-class Siswa extends Model
+class Siswa extends Authenticatable
 {
-    use HasFactory, Notifiable;
-
-    protected $table = 'siswa'; // Paksa pakai tabel tunggal
-
-    protected $fillable = [
-        'nis',
-        'nama',
-        'kelas',
-        'password',
-    ];
+    use Notifiable;
+    protected $table = 'siswa';
+    protected $fillable = ['nis', 'nama', 'kelas', 'password'];
+    protected $appends = ['name'];
 
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    // Relasi: Satu siswa bisa punya banyak aspirasi
-    public function aspirasi()
+    public function getNameAttribute()
     {
-        return $this->hasMany(Aspirasi::class, 'nis', 'nis');
+        return $this->nama;
+    }
+    public function getAuthPassword()
+    {
+        return $this->password;
     }
 }
