@@ -15,6 +15,7 @@ class SiswaController extends Controller
     {
         $query = Siswa::where('role', 'siswa');
 
+        // Filter Pencarian (Nama / NIS)
         if ($request->search) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama', 'like', "%{$request->search}%")
@@ -22,13 +23,25 @@ class SiswaController extends Controller
             });
         }
 
+        // Filter Kategori Kelas
+        if ($request->kelas) {
+            $query->where('kelas', $request->kelas);
+        }
+
+        // Ambil daftar kelas unik untuk dropdown filter
+        $kelasList = Siswa::where('role', 'siswa')
+            ->select('kelas')
+            ->distinct()
+            ->orderBy('kelas', 'asc')
+            ->pluck('kelas');
+
         return Inertia::render('Siswa/index', [
             'siswas' => $query->orderBy('nama', 'asc')->paginate(10)->withQueryString(),
-            'filters' => $request->only(['search'])
+            'filters' => $request->only(['search', 'kelas']),
+            'kelasList' => $kelasList
         ]);
     }
 
-    // Tambah Manual
     public function store(Request $request)
     {
         $request->validate([
@@ -48,7 +61,6 @@ class SiswaController extends Controller
         return redirect()->back()->with('message', 'Siswa baru berhasil ditambahkan!');
     }
 
-    // Update Data
     public function update(Request $request, $id)
     {
         $siswa = Siswa::findOrFail($id);
@@ -64,20 +76,19 @@ class SiswaController extends Controller
         return redirect()->back()->with('message', 'Data siswa berhasil diperbarui!');
     }
 
-    // Reset Password ke Default
     public function resetPassword($id)
     {
         $siswa = Siswa::findOrFail($id);
         $siswa->update(['password' => Hash::make('siswa123')]);
 
-        return redirect()->back()->with('message', 'Password ' . $siswa->nama . ' telah direset ke: siswa123');
+        return redirect()->back()->with('message', 'Password ' . $siswa->nama . ' telah direset ke default.');
     }
 
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|mimes:xlsx,xls,csv|max:2048']);
         Excel::import(new SiswaImport, $request->file('file'));
-        return redirect()->back()->with('message', 'Banjir data! Siswa berhasil di-import.');
+        return redirect()->back()->with('message', 'Data siswa berhasil di-import dari Excel.');
     }
 
     public function destroy($id)

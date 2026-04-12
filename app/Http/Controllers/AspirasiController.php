@@ -16,42 +16,60 @@ class AspirasiController extends Controller
         $user = Auth::user();
         $query = Aspirasi::with(['siswa', 'kategori']);
 
-        if ($user->role === 'admin') {
-            // Filter Admin
-            $stats = [
-                'total' => Aspirasi::count(),
-                'menunggu' => Aspirasi::where('status', 'Menunggu')->count(),
-                'proses' => Aspirasi::where('status', 'Proses')->count(),
-                'selesai' => Aspirasi::where('status', 'Selesai')->count(),
-            ];
-
-            if ($request->filled('tanggal')) $query->whereDate('created_at', $request->tanggal);
-            if ($request->filled('bulan')) $query->whereMonth('created_at', $request->bulan);
-            if ($request->filled('kategori')) $query->where('id_kategori', $request->kategori);
-            if ($request->filled('search')) {
-                $query->whereHas('siswa', function ($q) use ($request) {
-                    $q->where('nama', 'like', '%' . $request->search . '%')
-                        ->orWhere('nis', $request->search);
-                });
-            }
-            // Admin: Gunakan paginate
-            $aspirasis = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
-        } else {
-            // Siswa: WAJIB gunakan paginate juga agar formatnya sama ({ data: [...] })
-            $aspirasis = $query->where('nis', $user->nis)
-                ->orderBy('created_at', 'desc')
-                ->paginate(5) // Siswa lihat 5 per halaman
-                ->withQueryString();
-            $stats = [
-                'total' => Aspirasi::where('nis', $user->nis)->count(),
-                'terakhir' => Aspirasi::where('nis', $user->nis)->latest()->first()?->status ?? '-',
-            ];
+        // 1. Filter Role (Siswa hanya melihat laporannya sendiri)
+        if ($user->role === 'siswa') {
+            $query->where('nis', $user->nis);
         }
+
+        // --- MULAI LOGIKA FILTER DASHBOARD ---
+
+        // 2. Filter Periode Waktu (Dari - Sampai)
+        if ($request->filled('dari_tanggal') && $request->filled('sampai_tanggal')) {
+            $query->whereBetween('tanggal_kejadian', [$request->dari_tanggal, $request->sampai_tanggal]);
+        }
+
+        // 3. Filter Kategori
+        if ($request->filled('kategori') && $request->kategori !== 'semua') {
+            if ($request->kategori === 'manual') {
+                $query->whereNull('id_kategori')->whereNotNull('kategori_manual');
+            } else {
+                $query->where('id_kategori', $request->kategori);
+            }
+        }
+
+        // 4. Filter Pencarian Teks (Judul, Lokasi, Isi, NIS, atau Nama)
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                    ->orWhere('lokasi', 'like', "%{$search}%")
+                    ->orWhere('ket', 'like', "%{$search}%")
+                    ->orWhereHas('siswa', function ($qSiswa) use ($search) {
+                        $qSiswa->where('nama', 'like', "%{$search}%")
+                            ->orWhere('nis', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        // --- AKHIR LOGIKA FILTER ---
+
+        // Ambil data dengan pagination, WAJIB tambah withQueryString() agar filter tidak hilang saat pindah halaman
+        $aspirasis = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+
+        // Hitung statistik berdasarkan filter yang aktif (opsional: hapus clone $query jika stat ingin tetap total semua)
+        $stats = [
+            'total' => (clone $query)->count(),
+            'menunggu' => (clone $query)->where('status', 'Menunggu')->count(),
+            'proses' => (clone $query)->where('status', 'Proses')->count(),
+            'selesai' => (clone $query)->where('status', 'Selesai')->count(),
+            'terakhir' => $user->role === 'siswa' ? ($aspirasis->first()->status ?? '-') : null,
+        ];
+
         return Inertia::render('Dashboard', [
+            'aspirasis' => $aspirasis,
             'kategoris' => Kategori::all(),
-            'aspirasis' => $aspirasis, // Sekarang ini selalu berupa Object Pagination
             'stats' => $stats,
-            'filters' => $request->only(['tanggal', 'bulan', 'kategori', 'search'])
+            'filters' => $request->only(['search', 'kategori', 'dari_tanggal', 'sampai_tanggal']),
         ]);
     }
 
@@ -144,5 +162,30 @@ class AspirasiController extends Controller
         return Inertia::render('Histori/index', [
             'aspirasis' => $aspirasis
         ]);
+    }
+
+    public function cetak(Request $request)
+    {
+        $query = Aspirasi::with(['siswa', 'kategori']);
+
+        // 1. Filter "Cuma Beberapa" (Berdasarkan Pilihan Checkbox)
+        if ($request->ids) {
+            $ids = explode(',', $request->ids);
+            $query->whereIn('id_aspirasi', $ids);
+        }
+
+        // 2. Filter Periode Waktu (Dari - Sampai)
+        if ($request->dari_tanggal && $request->sampai_tanggal) {
+            $query->whereBetween('tanggal_kejadian', [$request->dari_tanggal, $request->sampai_tanggal]);
+        }
+
+        // 3. Filter Kategori Tertentu
+        if ($request->kategori && $request->kategori !== 'semua') {
+            $query->where('id_kategori', $request->kategori);
+        }
+
+        $aspirasis = $query->orderBy('created_at', 'desc')->get();
+
+        return view('cetak-laporan', compact('aspirasis'));
     }
 }

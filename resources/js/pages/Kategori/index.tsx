@@ -60,7 +60,7 @@ export default function Index({ kategoris = [] }: any) {
                 {/* Header Title & Import Excel */}
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-200 pb-6">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight italic">Manajemen Kategori</h1>
+                        <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Manajemen Kategori</h1>
                         <p className="text-sm text-slate-500 mt-1">Kelola atau import daftar klasifikasi laporan aspirasi.</p>
                     </div>
 

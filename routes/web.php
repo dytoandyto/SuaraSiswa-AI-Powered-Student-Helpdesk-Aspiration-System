@@ -44,6 +44,8 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/siswa/{id}', [SiswaController::class, 'update'])->name('siswa.update');
     Route::post('/siswa/{id}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset');
     Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->name('siswa.destroy');
+
+    Route::get('/aspirasi/cetak', [App\Http\Controllers\AspirasiController::class, 'cetak'])->name('aspirasi.cetak');
 });
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

@@ -164,13 +164,13 @@ export default function Welcome() {
             {/* FOOTER */}
             <footer className="py-12 bg-white border-t border-slate-200 text-center text-sm font-medium text-slate-500">
                 <div className="flex justify-center items-center gap-2 mb-4">
-                    <div className="w-6 h-6 bg-indigo-600 rounded flex items-center justify-center p-1">
+                    <div className="w-6 h-6 rounded flex items-center justify-center p-1">
                         <AppLogoIcon className="size-full text-white" />
                     </div>
                     <span className="font-black text-slate-800">SuaraSiswa.</span>
                 </div>
                 <p>&copy; {new Date().getFullYear()} UKK RPL - Project by <span className="font-bold text-slate-900">Andyto</span>.</p>
-                <p className="mt-1 text-xs text-slate-400">Terima kasih telah berpartisipasi memajukan sekolah.</p>
+                <p className="mt-1 text-xs text-slate-400">Tugas Rekayasa Perangkat Lunak </p>
             </footer>
         </div>
     );
