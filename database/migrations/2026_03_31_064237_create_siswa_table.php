@@ -16,7 +16,7 @@ return new class extends Migration
             // NIS (Sesuai soal int 10, tapi biasanya string lebih aman untuk angka unik)
             $table->string('nis', 10)->unique();
             $table->string('nama', 100);
-            $table->string('kelas', 10);
+            $table->string('kelas');
             $table->enum('role', ['admin', 'siswa'])->default('siswa'); // Penentu hak akses
             $table->string('password');
             $table->rememberToken();

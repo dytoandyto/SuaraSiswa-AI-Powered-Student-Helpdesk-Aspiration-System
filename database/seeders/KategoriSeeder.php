@@ -14,10 +14,6 @@ class KategoriSeeder extends Seeder
     public function run(): void
     {
         $data = [
-            ['ket_kategori' => 'Sarana'],
-            ['ket_kategori' => 'Prasarana'],
-            ['ket_kategori' => 'Kebersihan'],
-            ['ket_kategori' => 'Lain-lain'],
         ];
 
         foreach ($data as $item) {

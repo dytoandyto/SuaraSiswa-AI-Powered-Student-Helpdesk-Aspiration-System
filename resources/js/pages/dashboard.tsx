@@ -119,6 +119,7 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                 )}
 
                 {/* Header & Print Button */}
+                {/* Header & Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 no-print border-b border-slate-200 pb-5">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
@@ -126,20 +127,42 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                         </h1>
                         <p className="text-sm text-slate-500 mt-1">Selamat datang kembali, <span className="font-semibold text-slate-700">{auth.user.nama}</span> 👋</p>
                     </div>
+
+                    {/* Grup Tombol Admin */}
                     {isAdmin && (
-                        <a
-                            href={getPrintUrl()}
-                            target="_blank"
-                            className="bg-slate-900 hover:bg-slate-800 transition-all text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                            {selectedIds.length > 0 ? `Cetak (${selectedIds.length}) Laporan` : 'Cetak Semua Laporan'}
-                        </a>
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Tombol Hapus Massal (Hanya muncul jika ada checkbox yang dicentang) */}
+                            {selectedIds.length > 0 && (
+                                <button
+                                    onClick={() => {
+                                        if (confirm(`Yakin ingin menghapus ${selectedIds.length} data laporan ini secara permanen?`)) {
+                                            router.post(route('aspirasi.bulk_delete'), { ids: selectedIds }, {
+                                                onSuccess: () => setSelectedIds([]) // Kosongkan checkbox setelah berhasil
+                                            });
+                                        }
+                                    }}
+                                    className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 border border-red-200 hover:border-red-600 shadow-sm animate-in fade-in slide-in-from-right-2"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    Hapus ({selectedIds.length})
+                                </button>
+                            )}
+
+                            {/* Tombol Cetak Laporan */}
+                            <a
+                                href={getPrintUrl()}
+                                target="_blank"
+                                className="bg-slate-900 hover:bg-slate-800 transition-all text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                {selectedIds.length > 0 ? `Cetak (${selectedIds.length}) Laporan` : 'Cetak Semua Laporan'}
+                            </a>
+                        </div>
                     )}
                 </div>
 
-                {/* Stat Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {/* --- STAT CARD (SEKARANG AKAN SELALU MUNCUL DI SEMUA HALAMAN) --- */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {isAdmin ? (
                         <>
                             <StatCard title="Total Aspirasi" value={stats.total} icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" color="bg-indigo-500" lightColor="bg-indigo-50 text-indigo-600" />
@@ -162,6 +185,7 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                         </>
                     )}
                 </div>
+                {/* --- END STAT CARD --- */}
 
                 {isAdmin ? (
                     /* ================= TAMPILAN ADMIN ================= */
@@ -257,8 +281,8 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-4 align-top">
-                                                        <div className="text-sm text-slate-600 line-clamp-3 leading-relaxed whitespace-normal" title={asp.ket}>
-                                                            "{asp.ket}"
+                                                        <div className="text-sm text-slate-600 max-h-24 overflow-y-auto whitespace-pre-wrap pr-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                                                            {asp.ket}
                                                         </div>
                                                     </td>
                                                     <td className="px-5 py-4 text-center align-top">
@@ -425,7 +449,9 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                                 <h4 className="font-bold text-slate-800 text-sm leading-snug">{asp.judul || asp.lokasi}</h4>
                                             </div>
 
-                                            <p className="text-xs text-slate-500 pl-2 line-clamp-2 leading-relaxed mb-3">"{asp.ket}"</p>
+                                            <div className="text-xs text-slate-600 pl-2 pr-2 leading-relaxed mb-3 max-h-24 overflow-y-auto whitespace-pre-wrap scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                                                "{asp.ket}"
+                                            </div>
 
                                             {asp.feedback && (
                                                 <div className="ml-2 p-3 bg-slate-50 rounded-xl text-xs text-slate-600 border border-slate-100 relative">
@@ -467,41 +493,79 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                 )}
             </div>
 
-            {/* MODAL ADMIN PREMIUM */}
+            {/* MODAL ADMIN PREMIUM (DETAIL & TANGGAPAN) */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-all">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-all">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+
+                        {/* Header Modal */}
+                        <div className="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 sticky top-0">
                             <div>
-                                <h3 className="font-black text-slate-900 text-xl tracking-tight">Tanggapi Laporan</h3>
-                                <p className="text-xs text-slate-500 font-medium mt-1">Perbarui status dan berikan pesan balasan.</p>
+                                <h3 className="font-black text-slate-900 text-xl tracking-tight">Detail & Tanggapi Laporan</h3>
+                                <p className="text-xs text-slate-500 font-medium mt-1">Baca detail laporan sebelum memberikan tanggapan.</p>
                             </div>
                             <button onClick={() => setIsModalOpen(false)} className="bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 p-2 rounded-full transition-colors border border-slate-100 shadow-sm">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         </div>
-                        <form onSubmit={submitAdmin} className="p-6 space-y-6">
-                            <div>
-                                <label className={labelClasses}>Status Penyelesaian</label>
-                                <select value={data.status} onChange={e => setData('status', e.target.value)} className={inputClasses}>
-                                    <option value="Menunggu">🟠 Menunggu</option>
-                                    <option value="Proses">🔵 Sedang Diproses</option>
-                                    <option value="Selesai">🟢 Selesai</option>
-                                </select>
+
+                        {/* Konten Modal (Bisa di-scroll kalau panjang) */}
+                        <div className="overflow-y-auto p-5 md:p-6 bg-slate-50/50">
+
+                            {/* KOTAK DETAIL ASPIRASI FULL TEXT */}
+                            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6">
+                                <div className="flex flex-wrap items-center gap-2 mb-3">
+                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
+                                        {selectedAspirasi?.id_kategori && selectedAspirasi?.id_kategori !== 'manual' ? selectedAspirasi?.kategori?.ket_kategori : `Lainnya: ${selectedAspirasi?.kategori_manual}`}
+                                    </span>
+                                    <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 flex items-center gap-1">
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        {selectedAspirasi?.lokasi}
+                                    </span>
+                                </div>
+
+                                <h4 className="font-bold text-slate-900 text-lg mb-3">{selectedAspirasi?.judul}</h4>
+
+                                {/* INI BAGIAN TEKS YANG BISA DIBACA SEMUA */}
+                                <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    {selectedAspirasi?.ket}
+                                </div>
+
+                                {selectedAspirasi?.lampiran && (
+                                    <div className="mt-4 pt-4 border-t border-slate-100">
+                                        <a href={`/storage/${selectedAspirasi.lampiran}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 px-4 py-2.5 rounded-xl hover:bg-blue-100 border border-blue-100 transition-colors">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                            Buka Lampiran Bukti
+                                        </a>
+                                    </div>
+                                )}
                             </div>
-                            <div>
-                                <label className={labelClasses}>Pesan Balasan / Feedback</label>
-                                <textarea placeholder="Berikan penjelasan tindak lanjut untuk siswa..." value={data.feedback} onChange={e => setData('feedback', e.target.value)} className={`${inputClasses} h-36 resize-none`} required />
-                            </div>
-                            <div className="flex gap-3 pt-2">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="w-1/3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-3 rounded-xl font-bold text-sm transition-colors shadow-sm">
-                                    Batal
-                                </button>
-                                <button type="submit" disabled={processing} className="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-indigo-200 hover:-translate-y-0.5 transition-all">
-                                    Simpan Perubahan
-                                </button>
-                            </div>
-                        </form>
+
+                            {/* FORM TANGGAPAN */}
+                            <form onSubmit={submitAdmin} className="space-y-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                                <h4 className="font-bold text-slate-800 border-b border-slate-100 pb-2 text-xs uppercase tracking-wider">Berikan Tanggapan</h4>
+                                <div>
+                                    <label className={labelClasses}>Status Penyelesaian</label>
+                                    <select value={data.status} onChange={e => setData('status', e.target.value)} className={inputClasses}>
+                                        <option value="Menunggu">🟠 Menunggu (Belum Diproses)</option>
+                                        <option value="Proses">🔵 Sedang Diproses</option>
+                                        <option value="Selesai">🟢 Selesai (Tuntas)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={labelClasses}>Pesan Balasan / Feedback (Opsional)</label>
+                                    <textarea placeholder="Berikan penjelasan tindak lanjut untuk siswa..." value={data.feedback} onChange={e => setData('feedback', e.target.value)} className={`${inputClasses} h-28 resize-none`} />
+                                </div>
+                                <div className="flex gap-3 mt-6">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="w-1/3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 py-3 rounded-xl font-bold text-sm transition-colors shadow-sm">
+                                        Batal
+                                    </button>
+                                    <button type="submit" disabled={processing} className="w-2/3 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold text-sm shadow-md shadow-indigo-200 hover:-translate-y-0.5 transition-all">
+                                        {processing ? 'Menyimpan...' : 'Simpan Tanggapan'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

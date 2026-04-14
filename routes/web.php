@@ -45,7 +45,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/siswa/{id}/reset-password', [SiswaController::class, 'resetPassword'])->name('siswa.reset');
     Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->name('siswa.destroy');
 
-    Route::get('/aspirasi/cetak', [App\Http\Controllers\AspirasiController::class, 'cetak'])->name('aspirasi.cetak');
+    Route::get('/aspirasi/cetak', [AspirasiController::class, 'cetak'])->name('aspirasi.cetak');
+
+    Route::post('/aspirasi/bulk-delete', [AspirasiController::class, 'bulkDelete'])->name('aspirasi.bulk_delete');
 });
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
