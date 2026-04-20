@@ -13,7 +13,7 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
 
     // Form Khusus CRUD (Tambah/Edit)
     const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
-        nis: '',
+        username: '',
         nama: '',
         kelas: '',
     });
@@ -59,7 +59,7 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
     const openEditModal = (siswa: any) => {
         setIsEdit(true);
         setSelectedId(siswa.id);
-        setData({ nis: siswa.nis, nama: siswa.nama, kelas: siswa.kelas });
+        setData({ username: siswa.username, nama: siswa.nama, kelas: siswa.kelas });
         clearErrors();
         setIsModalOpen(true);
     };
@@ -137,7 +137,7 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
                             type="text"
                             defaultValue={filters?.search}
                             onChange={(e) => handleFilterChange('search', e.target.value)}
-                            placeholder="Cari Nama atau NIS..."
+                            placeholder="Cari Nama atau username..."
                             className="pl-10 w-full rounded-xl border-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 transition-all py-2.5"
                         />
                     </div>
@@ -173,7 +173,7 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
                                         <tr key={s.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <span className="font-mono text-sm text-indigo-600 font-semibold bg-indigo-50 px-2 py-1 rounded">
-                                                    {s.nis}
+                                                    {s.username}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-sm font-semibold text-slate-800">
@@ -245,9 +245,9 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
                         </div>
                         <form onSubmit={submitCrud} className="p-6 space-y-5">
                             <div>
-                                <label className={labelClasses}>NIS</label>
-                                <input type="text" value={data.nis} onChange={e => setData('nis', e.target.value)} className={inputClasses} placeholder="Masukkan Nomor Induk Siswa" required />
-                                {errors.nis && <p className="text-red-500 text-[10px] mt-1 font-semibold">{errors.nis}</p>}
+                                <label className={labelClasses}>Nomor Induk Siswa</label>
+                                <input type="text" value={data.username} onChange={e => setData('username', e.target.value)} className={inputClasses} placeholder="Masukkan Nomor Induk Siswa" required />
+                                {errors.username && <p className="text-red-500 text-[10px] mt-1 font-semibold">{errors.username}</p>}
                             </div>
                             <div>
                                 <label className={labelClasses}>Nama Lengkap</label>

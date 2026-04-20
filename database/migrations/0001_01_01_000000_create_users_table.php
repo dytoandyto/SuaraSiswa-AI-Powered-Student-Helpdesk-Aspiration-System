@@ -13,9 +13,22 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            // Ganti 'nis' jadi 'username' agar fleksibel untuk semua orang
+            $table->string('username', 20)->unique();
+            $table->string('nama', 100);
+            $table->string('kelas')->nullable(); // Boleh kosong (nullable) karena Sarpras/Admin tidak punya kelas
+
+            // Tambahkan semua role baru di sini
+            $table->enum('role', [
+                'admin',
+                'siswa',
+                'sarpras',
+                'hubin',
+                'sims',
+                'kesiswaan',
+                'kurikulum'
+            ])->default('siswa');
+
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

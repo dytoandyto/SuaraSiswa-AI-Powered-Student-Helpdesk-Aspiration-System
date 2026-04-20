@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
 
 interface LoginForm {
-    nis: string;
+    username: string;
     password: string;
     remember: boolean;
     [key: string]: string | boolean;
@@ -24,7 +24,7 @@ interface LoginProps {
 
 export default function Login({ status, canResetPassword }: LoginProps) {
     const { data, setData, post, processing, errors, reset } = useForm<LoginForm>({
-        nis: '',
+        username: '',
         password: '',
         remember: false,
     });
@@ -55,18 +55,18 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             Nomor Induk Siswa (NIS)
                         </Label>
                         <Input
-                            id="nis"
+                            id="username"
                             type="text"
                             required
                             autoFocus
                             tabIndex={1}
                             autoComplete="username"
-                            value={data.nis}
-                            onChange={(e) => setData('nis', e.target.value)}
+                            value={data.username}
+                            onChange={(e) => setData('username', e.target.value)}
                             placeholder="Contoh: 22001"
                             className="focus-visible:ring-indigo-600"
                         />
-                        <InputError message={errors.nis} />
+                        <InputError message={errors.username} />
                     </div>
 
                     {/* INPUT PASSWORD */}

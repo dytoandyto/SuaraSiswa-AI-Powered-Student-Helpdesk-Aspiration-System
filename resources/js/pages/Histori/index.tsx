@@ -60,7 +60,7 @@ export default function Histori({ aspirasis }: any) {
                                             <td className="px-4 py-4 align-top">
                                                 <div className="flex flex-col gap-1.5 items-start">
                                                     <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2 py-0.5 rounded">
-                                                        {asp.kategori?.ket_kategori}
+                                                        {asp.kategori?.ket_kategori}  {asp.kategori_manual}
                                                     </span>
                                                     <h4 className="font-bold text-gray-800 text-sm whitespace-normal leading-tight">
                                                         {asp.judul || asp.lokasi}

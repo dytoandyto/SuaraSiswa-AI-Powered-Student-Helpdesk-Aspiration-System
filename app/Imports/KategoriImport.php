@@ -26,4 +26,14 @@ class KategoriImport implements ToModel, WithHeadingRow
             'ket_kategori' => $row['kategori'],
         ]);
     }
+    public function batchSize(): int
+    {
+        return 100;
+    }
+
+    // Membaca file excel per 100 baris agar RAM laptop/server tidak penuh
+    public function chunkSize(): int
+    {
+        return 100;
+    }
 }

@@ -2,47 +2,46 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    // 1. $table = 'siswa' DIHAPUS. 
+    // Karena nama modelnya User, Laravel otomatis tahu tabelnya adalah 'users'.
+
     protected $fillable = [
-        'name',
-        'email',
+        'username', // Ini pengganti 'nis'
+        'nama',
+        'kelas',
+        'role',     // Jangan lupa tambahkan role agar bisa di-insert
         'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password' => 'hashed', // Fitur keamanan bawaan Laravel 11/12
         ];
     }
+
+    // --- FITUR BAWAAN DARI MODEL SISWA LAMA ---
+
+    protected $appends = ['name'];
+
+    // Ini dipertahankan agar kalau di file React kamu memanggil {auth.user.name}, 
+    // datanya tetap muncul dan tidak menyebabkan error.
+    public function getNameAttribute()
+    {
+        return $this->nama;
+    }
+
 }

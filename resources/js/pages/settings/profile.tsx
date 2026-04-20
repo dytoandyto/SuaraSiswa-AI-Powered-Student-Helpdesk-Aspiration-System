@@ -48,11 +48,11 @@ export default function Profile() {
                     <form onSubmit={submit} className="space-y-6">
                         {/* NIS - Selalu Disabled untuk siapapun */}
                         <div className="grid gap-2">
-                            <Label htmlFor="nis">Nomor Induk Siswa (NIS)</Label>
+                            <Label htmlFor="username">Nomor Induk Siswa (NIS)</Label>
                             <Input
-                                id="nis"
+                                id="username"
                                 className="mt-1 block w-full bg-gray-100"
-                                value={user.nis}
+                                value={user.username}
                                 disabled
                             />
                         </div>

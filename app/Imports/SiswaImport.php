@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\Siswa;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -24,15 +25,14 @@ class SiswaImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChun
 
     public function model(array $row)
     {
-        // Pengecekan agar baris kosong tidak ikut ter-import
         if (!isset($row['nis']) || !isset($row['nama'])) {
             return null;
         }
 
-        return new Siswa([
-            'nis'      => trim($row['nis']),
+        return new User([
+            'username' => trim($row['nis']),
             'nama'     => trim($row['nama']),
-            'kelas'    => trim($row['kelas']), // Ini akan membuang spasi gaib di awal/akhir
+            'kelas'    => trim($row['kelas']),
             'password' => $this->defaultPassword,
             'role'     => 'siswa',
         ]);

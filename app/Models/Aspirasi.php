@@ -14,7 +14,7 @@ class Aspirasi extends Model
 
     protected $fillable = [
         'judul',
-        'nis',
+        'username',
         'id_kategori',
         'kategori_manual',
         'lokasi',
@@ -26,13 +26,11 @@ class Aspirasi extends Model
         'feedback',
     ];
 
-    // Relasi balik ke Siswa
-    public function siswa()
+    public function user()
     {
-        return $this->belongsTo(Siswa::class, 'nis', 'nis');
+        return $this->belongsTo(User::class, 'username', 'username');
     }
 
-    // Relasi balik ke Kategori
     public function kategori()
     {
         return $this->belongsTo(Kategori::class, 'id_kategori', 'id_kategori');

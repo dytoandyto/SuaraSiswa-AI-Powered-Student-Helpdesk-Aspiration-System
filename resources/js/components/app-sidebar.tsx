@@ -15,17 +15,22 @@ import AppLogo from './app-logo';
 export function AppSidebar() {
     // Ambil data auth dari props global Inertia
     const { auth } = usePage().props as any;
-    const isAdmin = auth.user.role === 'admin';
+    
+    // Pecah pengecekan role agar lebih presisi
+    const role = auth.user.role;
+    const isAdmin = role === 'admin';
+    const isSiswa = role === 'siswa';
+    const isStaff = !isAdmin && !isSiswa; // Menangkap role sarpras, sims, kesiswaan, kurikulum, hubin
 
-    // Menu khusus SISWA
+    // 1. Menu khusus SISWA
     const siswaNavItems: NavItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Buat Laporan', // Ganti judul agar lebih intuitif untuk siswa
             url: '/dashboard',
             icon: LayoutGrid,
         },
         {
-            title: 'Histori Aspirasi',
+            title: 'Histori Laporan',
             url: '/histori', 
             icon: History,
         },
@@ -36,10 +41,24 @@ export function AppSidebar() {
         },
     ];
 
-    // Menu khusus ADMIN
+    // 2. Menu khusus STAF DIVISI (Sarpras, dll)
+    const staffNavItems: NavItem[] = [
+        {
+            title: 'Dashboard Laporan',
+            url: '/dashboard',
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Profil Saya',
+            url: '/profile',
+            icon: UserCircle,
+        },
+    ];
+
+    // 3. Menu khusus SUPER ADMIN
     const adminNavItems: NavItem[] = [
         {
-            title: 'Dashboard',
+            title: 'Dashboard Utama',
             url: '/dashboard',
             icon: LayoutGrid,
         },
@@ -49,21 +68,30 @@ export function AppSidebar() {
             icon: Tags,
         },
         {
-            title: 'Kelola Siswa',
-            url: '/siswa',
-            icon: Users, // Menggunakan icon Users agar lebih relevan
+            title: 'Kelola Pengguna', // Diubah namanya dari "Siswa" karena sekarang menampung staf juga
+            url: '/siswa', // URL tetap /siswa agar tidak error di route web.php
+            icon: Users,
+        },
+        {
+            title: 'Profil Saya',
+            url: '/profile',
+            icon: UserCircle,
         },
     ];
 
-    // Tentukan menu mana yang aktif berdasarkan role
-    const activeNavItems = isAdmin ? adminNavItems : siswaNavItems;
+    // Tentukan menu mana yang aktif berdasarkan role yang sedang login
+    let activeNavItems = siswaNavItems;
+    if (isAdmin) {
+        activeNavItems = adminNavItems;
+    } else if (isStaff) {
+        activeNavItems = staffNavItems;
+    }
 
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        {/* Hapus mt-auto dan pastikan asChild Link menyesuaikan lebar */}
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/dashboard" prefetch className="flex items-center justify-center w-full">
                                 <AppLogo />

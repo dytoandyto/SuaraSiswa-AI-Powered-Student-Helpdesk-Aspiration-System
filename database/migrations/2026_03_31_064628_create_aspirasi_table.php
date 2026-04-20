@@ -13,17 +13,24 @@ return new class extends Migration
     {
         Schema::create('aspirasi', function (Blueprint $table) {
             $table->id('id_aspirasi');
-            $table->string('nis', 10); // Relasi ke siswa
-            $table->unsignedBigInteger('id_kategori'); // Relasi ke kategori
-            $table->string('lokasi', 50);
+            $table->string('judul');
+
+            // PASTIKAN DUA BARIS INI MENGGUNAKAN 'username' BUKAN 'nis'
+            $table->string('username', 20);
+            $table->foreign('username')->references('username')->on('users')->onDelete('cascade');
+
+            $table->unsignedBigInteger('id_kategori')->nullable();
+            $table->foreign('id_kategori')->references('id_kategori')->on('kategori')->onDelete('cascade');
+            $table->string('kategori_manual')->nullable();
+
+            $table->string('lokasi');
+            $table->string('tujuan');
+            $table->date('tanggal_kejadian');
             $table->text('ket');
+            $table->string('lampiran')->nullable();
             $table->enum('status', ['Menunggu', 'Proses', 'Selesai'])->default('Menunggu');
             $table->text('feedback')->nullable();
             $table->timestamps();
-
-            // Setup Foreign Key agar data konsisten
-            $table->foreign('nis')->references('nis')->on('siswa')->onDelete('cascade');
-            $table->foreign('id_kategori')->references('id_kategori')->on('kategori')->onDelete('cascade');
         });
     }
 

@@ -4,11 +4,13 @@ import React, { useState, useEffect } from 'react';
 
 export default function Dashboard({ kategoris = [], aspirasis, stats, filters = {} }: any) {
     const { auth, flash } = usePage().props as any;
+
+    // PENTING: Kita pisahkan hak akses Super Admin dan Staf Divisi
     const isAdmin = auth.user.role === 'admin';
+    const isStaff = auth.user.role !== 'siswa'; // Semua yang bukan siswa (Admin, Sarpras, SIMS, dll) masuk ke sini
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedAspirasi, setSelectedAspirasi] = useState<any>(null);
-    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     const { data, setData, post, patch, processing, errors, reset } = useForm({
         judul: '',
@@ -48,42 +50,23 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
     const handleFilter = (e: React.FormEvent) => {
         e.preventDefault();
         const formData = new FormData(e.target as HTMLFormElement);
-        const data = Object.fromEntries(formData.entries());
+        const filterData = Object.fromEntries(formData.entries());
 
-        // Trik rapi: Hapus data yang kosong agar URL tidak panjang dan kotor (misal: ?search=&kategori=)
-        const cleanedData = Object.fromEntries(Object.entries(data).filter(([_, v]) => v !== ''));
-
+        const cleanedData = Object.fromEntries(Object.entries(filterData).filter(([_, v]) => v !== ''));
         router.get(route('dashboard'), cleanedData, { preserveState: true });
     };
 
-    // Logika Pintar untuk URL Cetak Laporan
     const getPrintUrl = () => {
-        if (typeof window === 'undefined') return '/aspirasi/cetak';
+        const params = new URLSearchParams();
 
-        // Ambil semua filter yang sedang aktif di URL saat ini
-        const params = new URLSearchParams(window.location.search);
-
-        // Jika ada checkbox yang dicentang, tambahkan parameter 'ids'
-        if (selectedIds.length > 0) {
-            params.set('ids', selectedIds.join(','));
-        }
+        // Ambil dari variabel 'filters' bawaan Inertia, bukan dari URL browser
+        if (filters.periode) params.append('periode', filters.periode);
+        if (filters.kategori) params.append('kategori', filters.kategori);
+        if (filters.search) params.append('search', filters.search);
 
         return `/aspirasi/cetak?${params.toString()}`;
     };
 
-    const toggleSelect = (id: number) => {
-        setSelectedIds(prev =>
-            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-        );
-    };
-
-    const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.checked && aspirasis?.data) {
-            setSelectedIds(aspirasis.data.map((a: any) => a.id_aspirasi));
-        } else {
-            setSelectedIds([]);
-        }
-    };
 
     const getStatusStyle = (status: string) => {
         switch (status) {
@@ -93,13 +76,12 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
         }
     };
 
-    // Class standar untuk input form
     const inputClasses = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-sm placeholder:text-slate-400";
     const labelClasses = "text-[11px] font-black text-slate-600 uppercase tracking-widest mb-1.5 block";
 
     return (
         <AppLayout breadcrumbs={[{ title: 'Dashboard', href: '/dashboard' }]}>
-            <Head title={isAdmin ? "Panel Admin" : "Pengaduan Siswa"} />
+            <Head title={isStaff ? `Panel ${auth.user.role.toUpperCase()}` : "Pengaduan Siswa"} />
 
             <div className="p-4 md:p-8 w-full max-w-7xl mx-auto space-y-6">
 
@@ -118,54 +100,35 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                     </div>
                 )}
 
-                {/* Header & Print Button */}
                 {/* Header & Action Buttons */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 no-print border-b border-slate-200 pb-5">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">
-                            {isAdmin ? 'Manajemen Aspirasi' : 'Dashboard Laporan'}
+                            {isStaff ? `Dashboard ${auth.user.role.toUpperCase()}` : 'Sistem Pengaduan Siswa'}
                         </h1>
                         <p className="text-sm text-slate-500 mt-1">Selamat datang kembali, <span className="font-semibold text-slate-700">{auth.user.nama}</span> 👋</p>
                     </div>
 
-                    {/* Grup Tombol Admin */}
-                    {isAdmin && (
+                    {/* Grup Tombol Staf/Admin */}
+                    {isStaff && (
                         <div className="flex flex-wrap items-center gap-3">
-                            {/* Tombol Hapus Massal (Hanya muncul jika ada checkbox yang dicentang) */}
-                            {selectedIds.length > 0 && (
-                                <button
-                                    onClick={() => {
-                                        if (confirm(`Yakin ingin menghapus ${selectedIds.length} data laporan ini secara permanen?`)) {
-                                            router.post(route('aspirasi.bulk_delete'), { ids: selectedIds }, {
-                                                onSuccess: () => setSelectedIds([]) // Kosongkan checkbox setelah berhasil
-                                            });
-                                        }
-                                    }}
-                                    className="bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all px-4 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 border border-red-200 hover:border-red-600 shadow-sm animate-in fade-in slide-in-from-right-2"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    Hapus ({selectedIds.length})
-                                </button>
-                            )}
-
-                            {/* Tombol Cetak Laporan */}
                             <a
                                 href={getPrintUrl()}
                                 target="_blank"
                                 className="bg-slate-900 hover:bg-slate-800 transition-all text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                {selectedIds.length > 0 ? `Cetak (${selectedIds.length}) Laporan` : 'Cetak Semua Laporan'}
+                                Cetak Laporan Periode Ini
                             </a>
                         </div>
                     )}
                 </div>
 
-                {/* --- STAT CARD (SEKARANG AKAN SELALU MUNCUL DI SEMUA HALAMAN) --- */}
+                {/* --- STAT CARD --- */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {isAdmin ? (
+                    {isStaff ? (
                         <>
-                            <StatCard title="Total Aspirasi" value={stats.total} icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" color="bg-indigo-500" lightColor="bg-indigo-50 text-indigo-600" />
+                            <StatCard title="Total Masuk" value={stats.total} icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" color="bg-indigo-500" lightColor="bg-indigo-50 text-indigo-600" />
                             <StatCard title="Menunggu" value={stats.menunggu} icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" color="bg-amber-500" lightColor="bg-amber-50 text-amber-600" />
                             <StatCard title="Diproses" value={stats.proses} icon="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" color="bg-blue-500" lightColor="bg-blue-50 text-blue-600" />
                             <StatCard title="Selesai" value={stats.selesai} icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" color="bg-emerald-500" lightColor="bg-emerald-50 text-emerald-600" />
@@ -185,22 +148,37 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                         </>
                     )}
                 </div>
-                {/* --- END STAT CARD --- */}
 
-                {isAdmin ? (
-                    /* ================= TAMPILAN ADMIN ================= */
+                {isStaff ? (
+                    /* ================= TAMPILAN ADMIN & STAF ================= */
                     <div className="space-y-6">
                         {/* Filter Form Toolbar */}
                         <form onSubmit={handleFilter} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 no-print flex flex-col lg:flex-row gap-3 items-center">
 
-                            <div className="flex w-full lg:w-auto items-center gap-2">
-                                <div className="flex-1">
-                                    <input type="date" name="dari_tanggal" defaultValue={filters.dari_tanggal} className={inputClasses} title="Dari Tanggal" />
-                                </div>
-                                <span className="text-slate-400 text-xs font-bold">s/d</span>
-                                <div className="flex-1">
-                                    <input type="date" name="sampai_tanggal" defaultValue={filters.sampai_tanggal} className={inputClasses} title="Sampai Tanggal" />
-                                </div>
+                            {/* Filter Periode Bulan */}
+                            <div className="relative w-full lg:w-48">
+                                {/* Placeholder Kustom (Menutupi ---- --) */}
+                                {!filters.periode && (
+                                    <div className="absolute inset-y-0 left-[1px] flex items-center pl-3.5 pointer-events-none rounded-l-xl overflow-hidden">
+                                        <div className="bg-slate-50 text-sm text-slate-400 w-32 py-2">
+                                            Semua Periode
+                                        </div>
+                                    </div>
+                                )}
+                                <input
+                                    type="month"
+                                    name="periode"
+                                    defaultValue={filters.periode}
+                                    className={inputClasses}
+                                    title="Pilih Bulan & Tahun"
+                                    onChange={(e) => {
+                                        // Trik simpel: Sembunyikan teks "Semua Periode" saat user selesai memilih bulan
+                                        const placeholder = e.target.previousElementSibling as HTMLElement;
+                                        if (placeholder) {
+                                            placeholder.style.display = e.target.value ? 'none' : 'flex';
+                                        }
+                                    }}
+                                />
                             </div>
 
                             <div className="w-full lg:w-1/4">
@@ -212,12 +190,12 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                             </div>
 
                             <div className="w-full lg:flex-1 flex gap-3">
-                                <input type="text" name="search" defaultValue={filters.search} placeholder="Cari NIS, Nama, atau Judul..." className={inputClasses} />
+                                <input type="text" name="search" defaultValue={filters.search} placeholder="Cari Username, Nama, atau Judul..." className={inputClasses} />
                                 <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 transition-colors text-white rounded-xl font-bold text-sm shadow-sm px-6 py-2.5 whitespace-nowrap">
-                                    Terapkan Filter
+                                    Terapkan
                                 </button>
-                                {/* Tombol Reset Filter */}
-                                {(filters.search || filters.kategori || filters.dari_tanggal) && (
+                                {/* Tombol Reset */}
+                                {(filters.search || filters.kategori || filters.periode) && (
                                     <Link href={route('dashboard')} className="bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-sm px-4 py-2.5 whitespace-nowrap transition-colors">
                                         Reset
                                     </Link>
@@ -231,14 +209,6 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                 <table className="w-full text-left">
                                     <thead className="bg-slate-50 text-[11px] uppercase font-black tracking-wider text-slate-500 border-b border-slate-100">
                                         <tr>
-                                            <th className="px-5 py-4 w-10 text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    onChange={toggleSelectAll}
-                                                    checked={aspirasis?.data?.length > 0 && selectedIds.length === aspirasis.data.length}
-                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                            </th>
                                             <th className="px-5 py-4 w-48 whitespace-nowrap">Tgl & Pengirim</th>
                                             <th className="px-5 py-4 min-w-[200px]">Aspirasi & Lokasi</th>
                                             <th className="px-5 py-4 min-w-[250px]">Keterangan</th>
@@ -250,20 +220,13 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                         {aspirasis?.data?.length > 0 ? (
                                             aspirasis.data.map((asp: any) => (
                                                 <tr key={asp.id_aspirasi} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-5 py-4 text-center align-top pt-5">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedIds.includes(asp.id_aspirasi)}
-                                                            onChange={() => toggleSelect(asp.id_aspirasi)}
-                                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                        />
-                                                    </td>
                                                     <td className="px-5 py-4 align-top">
-                                                        <div className="text-[11px] font-bold text-indigo-600 mb-1">
-                                                            {new Date(asp.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                        <div className="text-[11px] font-bold text-indigo-600 mb-1 flex items-center gap-1" title="Tanggal Kejadian">
+                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                            {new Date(asp.tanggal_kejadian).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
                                                         </div>
-                                                        <div className="font-bold text-slate-800 text-sm whitespace-nowrap">{asp.siswa?.nama || 'Siswa Terhapus'}</div>
-                                                        <div className="text-xs text-slate-500 font-mono mt-0.5">{asp.nis}</div>
+                                                        <div className="font-bold text-slate-800 text-sm whitespace-nowrap">{asp.user?.nama || 'Pengguna Terhapus'}</div>
+                                                        <div className="text-[10px] text-slate-400 mt-0.5">Dilaporkan: {new Date(asp.created_at).toLocaleDateString('id-ID')}</div>
                                                     </td>
                                                     <td className="px-5 py-4 align-top">
                                                         <div className="flex flex-wrap gap-1.5 items-center mb-1.5">
@@ -275,6 +238,10 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                                             </span>
                                                         </div>
                                                         <div className="font-bold text-slate-800 text-sm leading-tight whitespace-normal">{asp.judul}</div>
+                                                        <div className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-semibold text-rose-500">
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                                                            Tujuan: {asp.tujuan}
+                                                        </div>
                                                         <div className="text-xs text-slate-500 mt-1 flex items-center gap-1">
                                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                                             {asp.lokasi}
@@ -312,7 +279,7 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                                         <svg className="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
                                                     </div>
                                                     <p className="text-sm font-bold text-slate-700">Tidak ada aspirasi</p>
-                                                    <p className="text-xs text-slate-500 mt-1">Belum ada data yang sesuai dengan pencarian atau filter Anda.</p>
+                                                    <p className="text-xs text-slate-500 mt-1">Belum ada data laporan yang masuk ke divisi Anda.</p>
                                                 </td>
                                             </tr>
                                         )}
@@ -334,14 +301,12 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                             <form onSubmit={submitSiswa} className="space-y-6">
                                 <div className="space-y-4">
                                     <div className="grid sm:grid-cols-2 gap-6">
-                                        {/* Judul Aspirasi */}
                                         <div>
                                             <label className={labelClasses}>Judul Aspirasi <span className="text-red-500">*</span></label>
                                             <input type="text" value={data.judul} onChange={e => setData('judul', e.target.value)} className={inputClasses} placeholder="Contoh: Kerusakan Proyektor Kelas" required />
                                             {errors.judul && <p className="text-red-500 text-[10px] mt-1 font-semibold">{errors.judul}</p>}
                                         </div>
 
-                                        {/* Kategori Laporan */}
                                         <div>
                                             <label className={labelClasses}>Kategori Laporan <span className="text-red-500">*</span></label>
                                             <select
@@ -357,7 +322,6 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                                 <option value="manual" className="font-bold text-indigo-600">-- Lainnya (Ketik Manual) --</option>
                                             </select>
 
-                                            {/* Input Manual Muncul di Sini */}
                                             {data.id_kategori === 'manual' && (
                                                 <div className="animate-in fade-in slide-in-from-top-2 p-4 mt-3 bg-indigo-50/50 rounded-2xl border border-indigo-100">
                                                     <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1.5 block">Sebutkan Kategori Lainnya</label>
@@ -375,9 +339,23 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                     </div>
                                 </div>
 
+
                                 <div>
                                     <label className={labelClasses}>Tujuan Pengajuan <span className="text-red-500">*</span></label>
-                                    <input type="text" value={data.tujuan} onChange={e => setData('tujuan', e.target.value)} className={inputClasses} placeholder="Contoh: Waka Sarpras / Pihak Kantin" required />
+                                    <select
+                                        value={data.tujuan}
+                                        onChange={e => setData('tujuan', e.target.value)}
+                                        className={inputClasses}
+                                        required
+                                    >
+                                        <option value="" disabled>-- Pilih Tujuan -- </option>
+                                        <option value="ADMIN">Kepala Tata Usaha / Admin Umum</option>
+                                        <option value="SARPRAS">Waka Sarana & Prasarana (Sarpras)</option>
+                                        <option value="KESISWAAN">Waka Kesiswaan</option>
+                                        <option value="KURIKULUM">Waka Kurikulum</option>
+                                        <option value="HUBIN">Hubungan Industri (Hubin / PKL)</option>
+                                        <option value="SIMS">Tim IT / SIMS</option>
+                                    </select>
                                     {errors.tujuan && <p className="text-red-500 text-[10px] mt-1 font-semibold">{errors.tujuan}</p>}
                                 </div>
 
@@ -475,8 +453,8 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                     </div>
                 )}
 
-                {/* PAGINATION ADMIN */}
-                {isAdmin && aspirasis?.links?.length > 3 && (
+                {/* PAGINATION STAFF/ADMIN */}
+                {isStaff && aspirasis?.links?.length > 3 && (
                     <div className="flex flex-wrap gap-1 justify-center no-print pt-4">
                         {aspirasis.links.map((link: any, i: number) => (
                             <Link
@@ -498,7 +476,6 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 transition-all">
                     <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
 
-                        {/* Header Modal */}
                         <div className="p-5 md:p-6 border-b border-slate-100 flex justify-between items-center bg-white z-10 sticky top-0">
                             <div>
                                 <h3 className="font-black text-slate-900 text-xl tracking-tight">Detail & Tanggapi Laporan</h3>
@@ -509,10 +486,7 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                             </button>
                         </div>
 
-                        {/* Konten Modal (Bisa di-scroll kalau panjang) */}
                         <div className="overflow-y-auto p-5 md:p-6 bg-slate-50/50">
-
-                            {/* KOTAK DETAIL ASPIRASI FULL TEXT */}
                             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm mb-6">
                                 <div className="flex flex-wrap items-center gap-2 mb-3">
                                     <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
@@ -525,8 +499,6 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                 </div>
 
                                 <h4 className="font-bold text-slate-900 text-lg mb-3">{selectedAspirasi?.judul}</h4>
-
-                                {/* INI BAGIAN TEKS YANG BISA DIBACA SEMUA */}
                                 <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed p-4 bg-slate-50 rounded-xl border border-slate-100">
                                     {selectedAspirasi?.ket}
                                 </div>
@@ -541,7 +513,6 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                                 )}
                             </div>
 
-                            {/* FORM TANGGAPAN */}
                             <form onSubmit={submitAdmin} className="space-y-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                                 <h4 className="font-bold text-slate-800 border-b border-slate-100 pb-2 text-xs uppercase tracking-wider">Berikan Tanggapan</h4>
                                 <div>

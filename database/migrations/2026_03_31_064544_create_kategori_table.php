@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('kategori', function (Blueprint $table) {
             $table->id('id_kategori');
             $table->string('ket_kategori', 30);
+            $table->enum('tujuan_role', ['admin', 'sarpras', 'hubin', 'sims', 'kesiswaan', 'kurikulum'])->default('admin');
             $table->timestamps();
         });
     }
