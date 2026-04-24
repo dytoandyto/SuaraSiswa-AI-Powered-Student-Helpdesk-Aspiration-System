@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Imports\SiswaImport;
+use App\Models\FaqChatbot;
+use App\Models\TiketBantuan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -45,7 +47,7 @@ class SiswaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'username' => 'required|unique:siswa,username|max:20',
+            'username' => 'required|unique:users,username|max:20',
             'nama' => 'required|string|max:255',
             'kelas' => 'required|string|max:50',
         ]);
@@ -66,7 +68,7 @@ class SiswaController extends Controller
         $siswa = User::findOrFail($id);
 
         $request->validate([
-            'username' => 'required|max:20|unique:siswa,username,' . $siswa->id,
+            'username' => 'required|max:20|unique:users,username,' . $siswa->id,
             'nama' => 'required|string|max:255',
             'kelas' => 'required|string|max:50',
         ]);
@@ -76,12 +78,16 @@ class SiswaController extends Controller
         return redirect()->back()->with('message', 'Data siswa berhasil diperbarui!');
     }
 
+    // Fungsi untuk Reset Password
     public function resetPassword($id)
     {
-        $siswa = User::findOrFail($id);
-        $siswa->update(['password' => Hash::make('siswa123')]);
+        $siswa = User::findOrFail($id);   
+        $siswa->update([
+            'password' => Hash::make('siswa123')
+        ]);
 
-        return redirect()->back()->with('message', 'Password ' . $siswa->nama . ' telah direset ke default.');
+        // Kembalikan ke halaman sebelumnya dengan pesan sukses
+        return redirect()->back()->with('message', "Berhasil! Password untuk {$siswa->nama} telah direset menjadi 'siswa123'.");
     }
 
     public function import(Request $request)

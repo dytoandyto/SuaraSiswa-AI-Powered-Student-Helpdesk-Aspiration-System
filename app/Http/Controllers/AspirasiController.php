@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Aspirasi;
 use App\Models\Kategori;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB; // Tambahkan ini untuk Stored Procedure
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class AspirasiController extends Controller
@@ -15,7 +16,7 @@ class AspirasiController extends Controller
     {
         $user = Auth::user();
 
-        // 1. BUAT QUERY DASAR (Mencakup hak akses, bulan, dan kategori)
+        // 1. BUAT QUERY DASAR
         $query = Aspirasi::query();
 
         // -> Filter Hak Akses Role
@@ -25,15 +26,19 @@ class AspirasiController extends Controller
             $query->where('tujuan', strtoupper($user->role));
         }
 
-        // -> Filter Periode Bulan (Berlaku untuk Tabel & Statistik)
-        if ($request->filled('periode')) {
+        // -> Logika Cabang Pintar: Filter Rentang Tanggal ATAU Periode Bulan
+        if ($request->filled('dari_tanggal') && $request->filled('sampai_tanggal')) {
+            // Jika user memilih filter dari tanggal X sampai tanggal Y
+            $query->whereBetween('tanggal_kejadian', [$request->dari_tanggal, $request->sampai_tanggal]);
+        } elseif ($request->filled('periode')) {
+            // Jika user hanya memilih filter Bulan (Contoh: 2026-04)
             $tahun = substr($request->periode, 0, 4);
             $bulan = substr($request->periode, 5, 2);
             $query->whereYear('tanggal_kejadian', $tahun)
                 ->whereMonth('tanggal_kejadian', $bulan);
         }
 
-        // -> Filter Kategori (Berlaku untuk Tabel & Statistik)
+        // -> Filter Kategori
         if ($request->filled('kategori') && $request->kategori !== 'semua') {
             if ($request->kategori === 'manual') {
                 $query->whereNull('id_kategori')->whereNotNull('kategori_manual');
@@ -43,7 +48,6 @@ class AspirasiController extends Controller
         }
 
         // 2. HITUNG KARTU STATISTIK 
-        // (Dihitung di sini agar angkanya sesuai dengan bulan/kategori yang dipilih)
         $statusTerakhir = '-';
         if ($user->role === 'siswa') {
             $laporanTerbaru = (clone $query)->latest('created_at')->first();
@@ -51,6 +55,7 @@ class AspirasiController extends Controller
                 $statusTerakhir = $laporanTerbaru->status;
             }
         }
+        $rataRating = (clone $query)->whereNotNull('rating')->avg('rating');
 
         $stats = [
             'total' => (clone $query)->count(),
@@ -58,10 +63,10 @@ class AspirasiController extends Controller
             'proses' => (clone $query)->where('status', 'Proses')->count(),
             'selesai' => (clone $query)->where('status', 'Selesai')->count(),
             'terakhir' => $statusTerakhir,
+            'kepuasan' => number_format($rataRating, 1) ?? '0.0', // Format 4.5, 5.0, dll
         ];
 
-        // 3. LANJUTKAN QUERY UNTUK TABEL (Tambahkan Search & Relasi)
-        // Search sengaja ditaruh di bawah agar saat ngetik nama "Budi", Stat Card tidak ikut jadi 0.
+        // 3. PENCARIAN & PAGINASI
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -74,8 +79,9 @@ class AspirasiController extends Controller
             });
         }
 
+        // PERBAIKAN: Ubah menjadi created_at agar yang terbaru kirim ada di atas
         $aspirasis = $query->with(['user', 'kategori'])
-            ->orderBy('tanggal_kejadian', 'desc')
+            ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -83,10 +89,10 @@ class AspirasiController extends Controller
             'aspirasis' => $aspirasis,
             'kategoris' => Kategori::all(),
             'stats' => $stats,
-            // Pastikan mengirim kembali 'periode' agar input di React tidak kosong setelah direfresh
-            'filters' => $request->only(['search', 'kategori', 'periode']),
+            'filters' => $request->only(['search', 'kategori', 'periode', 'dari_tanggal', 'sampai_tanggal']),
         ]);
     }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -96,13 +102,9 @@ class AspirasiController extends Controller
             'tujuan' => 'required',
             'tanggal_kejadian' => 'required|date',
             'ket' => 'required',
-            'lampiran' => 'nullable|mimes:jpg,jpeg,png,pdf|max:2048', // Max 2MB
+            'lampiran' => 'nullable|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        $path = null;
-        if ($request->hasFile('lampiran')) {
-            $path = $request->file('lampiran')->store('aspirasi_files', 'public');
-        }
         $id_kategori = $request->id_kategori === 'manual' ? null : $request->id_kategori;
         $kategori_manual = $request->id_kategori === 'manual' ? $request->kategori_manual : null;
 
@@ -127,35 +129,51 @@ class AspirasiController extends Controller
         return redirect()->back()->with('message', 'Aspirasi berhasil dikirim dengan lampiran!');
     }
 
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
-        // Izinkan semua yang bukan siswa untuk menanggapi (Admin dan Staf)
         if (Auth::user()->role === 'siswa') {
             abort(403, 'Akses Ditolak!');
         }
 
+        // 1. Ambil data aspirasi saat ini dari database
+        // Gunakan \App\Models\Aspirasi atau DB::table('aspirasi')
+        $aspirasi = Aspirasi::findOrFail($id);
+        $statusSaatIni = $aspirasi->status;
+        $statusBaru = $request->status;
+
+        // 2. LOGIKA PENCEGAHAN (GUARD CLAUSE)
+        
+        // A. Jika sudah SELESAI, tidak boleh diubah ke apapun lagi
+        if ($statusSaatIni === 'Selesai') {
+            return redirect()->back()->with('error', 'Laporan sudah Selesai dan tidak bisa diubah kembali.');
+        }
+
+        // B. Jika sudah PROSES, tidak boleh balik ke MENUNGGU
+        if ($statusSaatIni === 'Proses' && $statusBaru === 'Menunggu') {
+            return redirect()->back()->with('error', 'Laporan sedang diproses, tidak bisa kembali ke Menunggu.');
+        }
+
+        // 3. VALIDASI FORM
         $request->validate([
             'status' => 'required|in:Menunggu,Proses,Selesai',
-            // Feedback opsional, agar staf bisa sekadar mengubah status jadi "Proses" tanpa harus ngetik balasan
             'feedback' => 'nullable|string',
         ]);
 
-        // Karena kamu memakai Stored Procedure, pastikan pemanggilannya begini:
+        // 4. EKSEKUSI STORED PROCEDURE
+        // Hanya dijalankan jika lolos pengecekan di atas
         DB::statement("CALL update_status_aspirasi(?, ?, ?)", [
             $id,
-            $request->status,
+            $statusBaru,   
             $request->feedback
         ]);
 
         return redirect()->back()->with('message', 'Tanggapan berhasil dikirim!');
     }
 
-    // Method history untuk menampilkan histori aspirasi siswa
     public function history()
     {
         $user = Auth::user();
 
-        // Pastikan hanya siswa yang punya histori
         if ($user->role === 'admin') {
             return redirect()->route('dashboard');
         }
@@ -163,7 +181,7 @@ class AspirasiController extends Controller
         $aspirasis = Aspirasi::with(['kategori'])
             ->where('username', $user->username)
             ->orderBy('created_at', 'desc')
-            ->paginate(10); // Tampilkan 10 histori per halaman
+            ->paginate(10);
 
         return Inertia::render('Histori/index', [
             'aspirasis' => $aspirasis
@@ -175,23 +193,24 @@ class AspirasiController extends Controller
         $user = Auth::user();
         $query = Aspirasi::with(['user', 'kategori']);
 
-        // 1. FILTER HAK AKSES ROLE (Wajib ada agar tidak bocor ke divisi lain)
+        // 1. FILTER HAK AKSES ROLE
         if ($user->role === 'siswa') {
             abort(403, 'Siswa tidak memiliki akses untuk mencetak laporan.');
         } elseif ($user->role !== 'admin') {
-            // Staf hanya bisa mencetak laporan divisinya sendiri
             $query->where('tujuan', strtoupper($user->role));
         }
 
-        // 2. Filter Periode Bulan
-        if ($request->filled('periode')) {
+        // 2. Logika Cabang Pintar Cetak: Filter Rentang Tanggal ATAU Periode Bulan
+        if ($request->filled('dari_tanggal') && $request->filled('sampai_tanggal')) {
+            $query->whereBetween('tanggal_kejadian', [$request->dari_tanggal, $request->sampai_tanggal]);
+        } elseif ($request->filled('periode')) {
             $tahun = substr($request->periode, 0, 4);
             $bulan = substr($request->periode, 5, 2);
             $query->whereYear('tanggal_kejadian', $tahun)
                 ->whereMonth('tanggal_kejadian', $bulan);
         }
 
-        // 3. Filter Kategori (Opsional)
+        // 3. Filter Kategori
         if ($request->filled('kategori') && $request->kategori !== 'semua') {
             if ($request->kategori === 'manual') {
                 $query->whereNull('id_kategori')->whereNotNull('kategori_manual');
@@ -200,23 +219,31 @@ class AspirasiController extends Controller
             }
         }
 
-        // 4. Urutkan berdasarkan tanggal kejadian agar rapi saat dibaca
-        $aspirasis = $query->orderBy('tanggal_kejadian', 'asc')->get();
+        // PERBAIKAN: Ubah menjadi created_at desc agar urutan hasil cetak selaras dengan dashboard
+        $aspirasis = $query->orderBy('created_at', 'desc')->get();
 
-        // Kita juga kirim data $request agar di tampilan PDF bisa dimunculkan judul 
-        // "Laporan Bulan: April 2026"
         return view('cetak-laporan', compact('aspirasis', 'request', 'user'));
     }
 
-    public function bulkDelete(Request $request)
+    public function beriRating(Request $request, $id)
     {
         $request->validate([
-            'ids' => 'required|array',
+            'rating' => 'required|integer|min:1|max:5',
         ]);
 
-        // Hapus semua aspirasi yang ID-nya dikirim dari checkbox React
-        \App\Models\Aspirasi::whereIn('id_aspirasi', $request->ids)->delete();
+        // Gunakan findOrFail agar kalau error langsung kelihatan
+        $aspirasi = Aspirasi::findOrFail($id);
 
-        return redirect()->back()->with('message', count($request->ids) . ' laporan berhasil dihapus secara massal.');
+        // Validasi ekstra: Pastikan yang ngisi rating adalah yang bikin laporan
+        if ($aspirasi->username !== Auth::user()->username) {
+            abort(403, 'Bukan laporan Anda!');
+        }
+
+        // Simpan datanya!
+        $aspirasi->update([
+            'rating' => $request->rating,
+        ]);
+
+        return redirect()->back()->with('message', 'Terima kasih! Penilaianmu berhasil dikirim.');
     }
 }

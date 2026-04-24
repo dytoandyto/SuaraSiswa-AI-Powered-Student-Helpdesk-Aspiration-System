@@ -5,8 +5,11 @@ namespace App\Imports;
 use App\Models\Kategori;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithBatchInserts; // WAJIB ADA
+use Maatwebsite\Excel\Concerns\WithChunkReading; // WAJIB ADA
 
-class KategoriImport implements ToModel, WithHeadingRow
+// Pasang interface-nya di sini agar sistem tahu file ini mau diproses massal
+class KategoriImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChunkReading
 {
     /**
      * @param array $row
@@ -15,25 +18,22 @@ class KategoriImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        // 1. Tambahkan pengecekan ini:
-        // Jika kolom 'kategori' kosong atau hanya berisi spasi, jangan simpan (return null)
+        // Jika kolom 'kategori' kosong atau hanya berisi spasi, lewati baris ini
         if (!isset($row['kategori']) || empty(trim($row['kategori']))) {
             return null;
         }
 
         return new Kategori([
-            // Pastikan 'kategori' di sini sesuai dengan header di Excel kamu
             'ket_kategori' => $row['kategori'],
         ]);
     }
     public function batchSize(): int
     {
-        return 100;
+        return 500; 
     }
 
-    // Membaca file excel per 100 baris agar RAM laptop/server tidak penuh
     public function chunkSize(): int
     {
-        return 100;
+        return 500;
     }
 }

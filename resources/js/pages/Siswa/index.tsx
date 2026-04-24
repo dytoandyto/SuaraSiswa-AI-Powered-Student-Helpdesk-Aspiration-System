@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { Search, Trash2, UploadCloud, Users, Pencil, KeyRound, Plus } from 'lucide-react';
+import { Search, Trash2, UploadCloud, Users, Pencil, KeyRound, Plus, Download } from 'lucide-react';
 import React, { useState } from 'react';
 
 export default function Index({ siswas, filters, kelasList = [] }: any) {
@@ -12,7 +12,7 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
     });
 
     // Form Khusus CRUD (Tambah/Edit)
-    const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
+    const { data, setData, post, patch, processing, errors, reset, clearErrors } = useForm({
         username: '',
         nama: '',
         kelas: '',
@@ -67,7 +67,8 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
     const submitCrud = (e: React.FormEvent) => {
         e.preventDefault();
         if (isEdit && selectedId) {
-            put(route('siswa.update', selectedId), {
+            // PASTIKAN INI PATCH, BUKAN PUT
+            patch(route('siswa.update', selectedId), {
                 onSuccess: () => { setIsModalOpen(false); reset(); },
                 preserveScroll: true
             });
@@ -100,32 +101,57 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
 
                 {/* Header & Import Form */}
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5 border-b border-slate-200 pb-5">
-                    <div>
+                    {/* Judul & Deskripsi */}
+                    <div className="flex-1 w-full">
                         <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">Database Siswa</h1>
                         <p className="text-sm text-slate-500 mt-1">Kelola akses, data kelas, dan pengaturan password siswa.</p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                        <button onClick={openAddModal} className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
-                            <Plus className="w-4 h-4" /> Tambah Manual
-                        </button>
+                    {/* Area Aksi (Tombol & Import) */}
+                    <div className="flex flex-col sm:flex-row items-end gap-3 w-full lg:w-auto">
 
-                        <form onSubmit={handleImport} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-emerald-50 p-2 rounded-xl border border-emerald-100 shadow-sm w-full lg:w-auto">
-                            <input
-                                type="file"
-                                accept=".xlsx, .xls, .csv"
-                                onChange={e => setImportData('file', e.target.files ? e.target.files[0] : null)}
-                                className="w-full sm:w-auto text-xs file:mr-3 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:font-semibold file:bg-white file:text-emerald-700 file:shadow-sm hover:file:bg-emerald-100 cursor-pointer text-emerald-800"
-                            />
-                            <button
-                                type="submit"
-                                disabled={processingImport || !importData.file}
-                                className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-semibold text-xs flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-                            >
-                                <UploadCloud className="w-4 h-4" />
-                                {processingImport ? 'Memproses...' : 'Import'}
-                            </button>
-                        </form>
+                        {/* KOTAK IMPORT EXCEL (Diperkecil & Dibuat Kompak) */}
+                        <div className="bg-emerald-50 p-2.5 rounded-xl border border-emerald-100 shadow-sm w-full sm:w-auto">
+                            {/* Header Import & Link Download */}
+                            <div className="flex justify-between items-center px-1 mb-2">
+                                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Import Data</span>
+                                <a
+                                    href="/templates/template_import_siswa.xlsx"
+                                    download="Template_Siswa_TarunaBhakti.xlsx"
+                                    className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-800 bg-emerald-100/50 hover:bg-emerald-200 px-2 py-1 rounded transition-colors"
+                                    title="Download format Excel yang benar"
+                                >
+                                    <Download className="w-3 h-3" /> Unduh Template
+                                </a>
+                            </div>
+
+                            {/* Form Upload */}
+                            <form onSubmit={handleImport} className="flex items-center gap-2">
+                                <input
+                                    type="file"
+                                    accept=".xlsx, .xls, .csv"
+                                    onChange={e => setImportData('file', e.target.files ? e.target.files[0] : null)}
+                                    className="w-full sm:w-56 text-[11px] text-emerald-800 file:cursor-pointer file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:font-bold file:bg-white file:text-emerald-700 file:shadow-sm hover:file:bg-emerald-100 cursor-pointer focus:outline-none transition-all"
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={processingImport || !importData.file}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg font-bold text-[11px] flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                >
+                                    <UploadCloud className="w-3.5 h-3.5" />
+                                    {processingImport ? 'Loading...' : 'Upload'}
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* TOMBOL TAMBAH MANUAL */}
+                        {/* <button
+                            onClick={openAddModal}
+                            className="w-full sm:w-auto h-[60px] bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white px-6 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
+                        >
+                            <Plus className="w-4 h-4" /> Tambah Manual
+                        </button> */}
+
                     </div>
                 </div>
 
@@ -223,8 +249,8 @@ export default function Index({ siswas, filters, kelasList = [] }: any) {
                                     href={link.url || '#'}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                     className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${link.active
-                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                            : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
                                         } ${!link.url && 'opacity-50 pointer-events-none'}`}
                                 />
                             ))}

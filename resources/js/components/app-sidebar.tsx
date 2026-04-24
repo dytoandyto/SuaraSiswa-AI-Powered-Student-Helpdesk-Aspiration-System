@@ -15,7 +15,7 @@ import AppLogo from './app-logo';
 export function AppSidebar() {
     // Ambil data auth dari props global Inertia
     const { auth } = usePage().props as any;
-    
+
     // Pecah pengecekan role agar lebih presisi
     const role = auth.user.role;
     const isAdmin = role === 'admin';
@@ -25,13 +25,18 @@ export function AppSidebar() {
     // 1. Menu khusus SISWA
     const siswaNavItems: NavItem[] = [
         {
-            title: 'Buat Laporan', // Ganti judul agar lebih intuitif untuk siswa
+            title: 'Buat Laporan', 
             url: '/dashboard',
             icon: LayoutGrid,
         },
+        // {
+        //     title: 'Chat Bantuan', 
+        //     url: '/chat-bantuan',
+        //     icon: Users,
+        // },
         {
             title: 'Histori Laporan',
-            url: '/histori', 
+            url: '/histori',
             icon: History,
         },
         {
@@ -68,9 +73,14 @@ export function AppSidebar() {
             icon: Tags,
         },
         {
-            title: 'Kelola Pengguna', // Diubah namanya dari "Siswa" karena sekarang menampung staf juga
+            title: 'Kelola Siswa', // Diubah namanya dari "Siswa" karena sekarang menampung staf juga
             url: '/siswa', // URL tetap /siswa agar tidak error di route web.php
             icon: Users,
+        },
+        {
+            title: 'Kelola FAQ Chatbot',
+            url: '/admin/chatbot',
+            icon: History,
         },
         {
             title: 'Profil Saya',

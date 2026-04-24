@@ -76,11 +76,11 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                                 <Lock className="w-4 h-4 text-gray-400" />
                                 Kata Sandi
                             </Label>
-                            {canResetPassword && (
+                            {/* {canResetPassword && (
                                 <TextLink href={route('password.request')} className="text-xs font-bold text-indigo-600" tabIndex={5}>
                                     Lupa Password?
                                 </TextLink>
-                            )}
+                            )} */}
                         </div>
                         <Input
                             id="password"

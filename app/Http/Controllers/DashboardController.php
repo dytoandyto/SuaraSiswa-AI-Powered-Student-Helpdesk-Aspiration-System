@@ -14,7 +14,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Jika admin
+        // admin
         if ($user->role === 'admin') {
             return Inertia::render('Dashboard', [
                 'aspirasis' => Aspirasi::with(['siswa', 'kategori'])
@@ -24,7 +24,7 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Jika aiswa
+        // aiswa
         return Inertia::render('Dashboard', [
             'kategoris' => Kategori::all(),
             'aspirasis' => Aspirasi::with('kategori')

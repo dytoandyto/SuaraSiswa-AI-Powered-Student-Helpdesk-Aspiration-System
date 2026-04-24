@@ -24,6 +24,8 @@ class Aspirasi extends Model
         'lampiran',
         'status',
         'feedback',
+        'rating', 
+        'ulasan_siswa'
     ];
 
     public function user()

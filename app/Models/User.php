@@ -10,14 +10,11 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    // 1. $table = 'siswa' DIHAPUS. 
-    // Karena nama modelnya User, Laravel otomatis tahu tabelnya adalah 'users'.
-
     protected $fillable = [
-        'username', // Ini pengganti 'nis'
+        'username', 
         'nama',
         'kelas',
-        'role',     // Jangan lupa tambahkan role agar bisa di-insert
+        'role',    
         'password',
     ];
 
@@ -29,16 +26,14 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'password' => 'hashed', // Fitur keamanan bawaan Laravel 11/12
+            'password' => 'hashed',
         ];
     }
 
-    // --- FITUR BAWAAN DARI MODEL SISWA LAMA ---
 
     protected $appends = ['name'];
 
-    // Ini dipertahankan agar kalau di file React kamu memanggil {auth.user.name}, 
-    // datanya tetap muncul dan tidak menyebabkan error.
+    //{auth.user.name}, 
     public function getNameAttribute()
     {
         return $this->nama;

@@ -11,7 +11,6 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
-    // Menampilkan halaman profil
     public function edit(Request $request): Response
     {
         return Inertia::render('Profile/Edit', [
@@ -19,19 +18,16 @@ class ProfileController extends Controller
         ]);
     }
 
-    // Update data dasar (Nama & Kelas)
     public function update(Request $request): RedirectResponse
     {
         $user = $request->user();
 
-        // Jika Siswa mencoba update profil, tolak laporannya
         if ($user->role !== 'admin') {
             return redirect()->back()->with('error', 'Hanya admin yang dapat mengubah profil.');
         }
 
         $request->validate([
             'nama' => 'required|string|max:255',
-            // Tambahkan validasi lain jika perlu
         ]);
 
         $user->update($request->only('nama'));
@@ -39,7 +35,6 @@ class ProfileController extends Controller
         return redirect()->back()->with('message', 'Profil berhasil diperbarui!');
     }
 
-    // Update Password (Poin Plus Keamanan)
     public function updatePassword(Request $request): RedirectResponse
     {
         $validated = $request->validate([

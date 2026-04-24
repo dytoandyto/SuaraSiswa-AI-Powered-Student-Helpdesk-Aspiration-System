@@ -8,15 +8,14 @@
     <style>
         /* Pengaturan Standar Kertas A4 */
         @page {
-            size: A4;
-            margin: 20mm;
+            size: A4 portrait;
+            margin: 15mm 20mm;
         }
 
         /* Reset & Tipografi Dasar */
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
-            /* Standar ukuran font surat resmi */
+            font-size: 11pt;
             color: #000;
             background: #fff;
             margin: 0;
@@ -27,7 +26,6 @@
         .container {
             width: 100%;
             max-width: 210mm;
-            /* Lebar maksimal A4 */
             margin: 0 auto;
         }
 
@@ -54,17 +52,9 @@
             transition: opacity 0.2s;
         }
 
-        .btn:hover {
-            opacity: 0.8;
-        }
-
-        .btn-close {
-            background: #ef4444;
-        }
-
-        .btn-print {
-            background: #4f46e5;
-        }
+        .btn:hover { opacity: 0.8; }
+        .btn-close { background: #ef4444; }
+        .btn-print { background: #4f46e5; }
 
         /* ================= KOP SURAT ================= */
         .kop-surat {
@@ -84,6 +74,7 @@
             font-size: 18pt;
             font-weight: bold;
             margin: 3px 0;
+            letter-spacing: 1px;
         }
 
         .kop-surat h3 {
@@ -107,20 +98,21 @@
             border-top: 3px solid #000;
             border-bottom: 1px solid #000;
             height: 2px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         /* ================= JUDUL LAPORAN ================= */
         .judul-laporan {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .judul-laporan h3 {
-            font-size: 14pt;
+            font-size: 13pt;
             text-decoration: underline;
             margin: 0 0 5px 0;
             font-weight: bold;
+            text-transform: uppercase;
         }
 
         .judul-laporan p {
@@ -133,43 +125,33 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 30px;
-            font-size: 11pt;
+            font-size: 10.5pt;
         }
 
-        /* Mencegah baris tabel terpotong di tengah saat pindah halaman print */
-        tr {
-            page-break-inside: avoid;
-        }
+        tr { page-break-inside: avoid; }
 
-        th,
-        td {
+        th, td {
             border: 1px solid #000;
-            padding: 8px 10px;
+            padding: 8px;
             vertical-align: top;
         }
 
         th {
-            background-color: #e5e5e5;
+            background-color: #f0f0f0;
             font-weight: bold;
             text-align: center;
             text-transform: uppercase;
             font-size: 10pt;
-            padding: 12px 8px;
+            padding: 10px 8px;
         }
 
         /* Styling Khusus Kolom */
-        .col-center {
-            text-align: center;
-        }
-
-        .text-bold {
-            font-weight: bold;
-        }
-
-        .text-muted {
-            color: #333;
-            font-size: 10pt;
-            margin-top: 4px;
+        .col-center { text-align: center; }
+        .text-bold { font-weight: bold; }
+        .text-muted { 
+            color: #444; 
+            font-size: 9.5pt; 
+            margin-top: 3px; 
         }
 
         /* ================= TANDA TANGAN ================= */
@@ -177,7 +159,6 @@
             width: 100%;
             margin-top: 40px;
             page-break-inside: avoid;
-            /* Jangan pisahkan TTD ke halaman beda */
         }
 
         .ttd-box {
@@ -186,25 +167,13 @@
             width: 250px;
         }
 
-        .ttd-box p {
-            margin: 0;
-        }
+        .ttd-box p { margin: 0; }
+        .ttd-space { height: 80px; }
 
-        .ttd-space {
-            height: 80px;
-        }
-
-        /* Ruang untuk tanda tangan asli/stempel */
-
-        /* Mode Print */
         @media print {
-            .no-print-area {
-                display: none !important;
-            }
-
-            body {
-                background: transparent;
-            }
+            .no-print-area { display: none !important; }
+            body { background: transparent; }
+            th { -webkit-print-color-adjust: exact; color-adjust: exact; }
         }
     </style>
 </head>
@@ -225,51 +194,52 @@
             <p>Jalan Pekapuran Curug Cimanggis Depok 16953</p>
             <p>Telp: (021) 8744810 | Website: <a href="http://www.smktarunabhakti.net">www.smktarunabhakti.net</a> | Email: taruna@smktarunabhakti.net</p>
         </div>
-
         <div class="garis-kop"></div>
 
         <div class="judul-laporan">
-            <h3 style="text-align: center;">
-                LAPORAN DATA PENGADUAN
-                <br>
-                <small>
-                    Divisi: {{ $user->role === 'admin' ? 'Semua Divisi (Admin)' : strtoupper($user->role) }}
-                </small>
-                <br>
-                <small>
-                    Periode: {{ $request->periode ? date('F Y', strtotime($request->periode . '-01')) : 'Semua Waktu' }}
-                </small>
-            </h3>
-            <p>Tanggal Cetak: {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+            <h3>LAPORAN DATA PENGADUAN & ASPIRASI SISWA</h3>
+            <p>
+                <strong>Divisi Tujuan:</strong> {{ $user->role === 'admin' ? 'Semua Divisi (Rekapitulasi Total)' : strtoupper($user->role) }}<br>
+                <strong>Periode:</strong> {{ $request->periode ? \Carbon\Carbon::parse($request->periode . '-01')->locale('id')->translatedFormat('F Y') : 'Keseluruhan Waktu' }}
+            </p>
         </div>
 
         <table>
             <thead>
                 <tr>
                     <th width="5%">No</th>
-                    <th width="15%">Waktu Laporan</th>
-                    <th width="20%">Pengirim</th>
-                    <th width="15%">Kategori</th>
-                    <th width="33%">Deskripsi Pengaduan</th>
-                    <th width="12%">Status</th>
+                    <th width="16%">Tanggal</th>
+                    <th width="20%">Data Pelapor</th>
+                    <th width="22%">Kategori & Tujuan</th>
+                    <th width="27%">Detail Laporan</th>
+                    <th width="10%">Status</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($aspirasis as $index => $asp)
                 <tr>
                     <td class="col-center">{{ $index + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($asp->created_at)->format('d/m/Y H:i') }}</td>
+                    <td>
+                        <div class="text-bold">Kejadian:</div>
+                        <div>{{ \Carbon\Carbon::parse($asp->tanggal_kejadian)->locale('id')->translatedFormat('d F Y') }}</div>
+                        <div class="text-muted" style="margin-top: 8px;">
+                            Dilaporkan:<br>
+                            {{ \Carbon\Carbon::parse($asp->created_at)->format('d/m/Y H:i') }}
+                        </div>
+                    </td>
                     <td>
                         <div class="text-bold">{{ $asp->user->nama ?? 'Siswa Terhapus' }}</div>
                         <div class="text-muted">NIS: {{ $asp->username }}</div>
                         <div class="text-muted">Kelas: {{ $asp->user->kelas ?? '-' }}</div>
                     </td>
                     <td>
-                        {{ $asp->id_kategori && $asp->id_kategori !== 'manual' ? $asp->kategori->ket_kategori : ($asp->kategori_manual ?? '-') }}
+                        <div class="text-bold">{{ $asp->id_kategori && $asp->id_kategori !== 'manual' ? $asp->kategori->ket_kategori : ($asp->kategori_manual ?? '-') }}</div>
+                        <div class="text-muted" style="margin-top: 4px;">Tujuan: {{ strtoupper($asp->tujuan) }}</div>
                     </td>
                     <td>
-                        <div class="text-bold" style="margin-bottom: 5px;">{{ $asp->judul }}</div>
-                        <div style="text-align: justify;">{{ $asp->ket }}</div>
+                        <div class="text-bold" style="margin-bottom: 4px;">{{ $asp->judul }}</div>
+                        <div class="text-muted" style="margin-bottom: 6px; font-style: italic;">Lokasi: {{ $asp->lokasi }}</div>
+                        <div style="text-align: justify; line-height: 1.4;">{{ $asp->ket }}</div>
                     </td>
                     <td class="col-center text-bold">
                         {{ strtoupper($asp->status) }}
@@ -277,7 +247,9 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="col-center" style="padding: 30px;">Tidak ada data laporan yang sesuai dengan filter.</td>
+                    <td colspan="6" class="col-center" style="padding: 40px; font-style: italic;">
+                        Tidak ada data laporan yang sesuai dengan filter pencarian pada periode ini.
+                    </td>
                 </tr>
                 @endforelse
             </tbody>
@@ -285,10 +257,12 @@
 
         <div class="ttd-container">
             <div class="ttd-box">
-                <p>Depok, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
-                <p>Mengetahui,<br>Admin Sistem / Tata Usaha</p>
+                <p>Depok, {{ \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</p>
+                <p>Mengetahui,</p>
+                
                 <div class="ttd-space"></div>
-                <p class="text-bold">_________________________</p>
+                
+                <p class="text-bold">( _________________________ )</p>
                 <p>NIP. ........................................</p>
             </div>
             <div style="clear: both;"></div>
