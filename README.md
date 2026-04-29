@@ -42,13 +42,14 @@
 
 ## 📸 Preview Aplikasi
 
-| **Landing Page** | **Dashboard Admin & Statistik** |
-| :---: | :---: |
-| ![Landing Page](https://github.com/user-attachments/assets/baacf093-87ff-4748-bbc6-cf8dbdd459fb) | ![Dashboard Admin](https://github.com/user-attachments/assets/23cdb9c7-0c5c-4ad5-9723-6c4536b4c63d) |
+### 1. Halaman Utama (Landing Page)
+![Landing Page SuaraSiswa](docs/screencapture-localhost-8000-2026-04-29-07_45_40.jpg)
 
-| **Manajemen Aspirasi (Admin)** |
-| :---: |
-| ![Manajemen Aspirasi](https://github.com/user-attachments/assets/f97439f7-806a-4b5e-b7f8-87fcb06a2ea0) |
+### 2. Dashboard Siswa & AI Chatbot
+![Dashboard Siswa](docs/screencapture-localhost-8000-dashboard-2026-04-29-07_52_37.jpg)
+
+### 3. Dashboard Admin & Manajemen Aspirasi
+![Dashboard Admin](docs/screencapture-localhost-8000-dashboard-2026-04-29-07_50_07.jpg)
 
 ---
 
