@@ -42,15 +42,13 @@
 
 ## 📸 Preview Aplikasi
 
-Agar tampilan tidak terlalu besar, gambar di bawah ini telah disesuaikan ukurannya. Klik gambar untuk melihat ukuran penuh.
-
 | **Landing Page** | **Dashboard Admin & Statistik** |
 | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/baacf093-87ff-4748-bbc6-cf8dbdd459fb" width="300" /> | <img src="https://github.com/user-attachments/assets/23cdb9c7-0c5c-4ad5-9723-6c4536b4c63d" width="300" /> |
+| ![Landing Page](https://github.com/user-attachments/assets/baacf093-87ff-4748-bbc6-cf8dbdd459fb) | ![Dashboard Admin](https://github.com/user-attachments/assets/23cdb9c7-0c5c-4ad5-9723-6c4536b4c63d) |
 
 | **Manajemen Aspirasi (Admin)** |
-| :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/f97439f7-806a-4b5e-b7f8-87fcb06a2ea0" width="300" /> |
+| :---: |
+| ![Manajemen Aspirasi](https://github.com/user-attachments/assets/f97439f7-806a-4b5e-b7f8-87fcb06a2ea0) |
 
 ---
 
@@ -60,20 +58,24 @@ Ikuti langkah-langkah berikut untuk menjalankan proyek di lingkungan lokal:
 
 1. **Clone repository:**
    ```bash
-   git clone [https://github.com/username/SuaraSiswa.git](https://github.com/username/SuaraSiswa.git)
+   git clone https://github.com/username/SuaraSiswa.git
    cd SuaraSiswa
-2. **Install Dependencies:**
-   ```bash
-   composer install
-   npm install
+   Install Dependencies:
+2. **Install Dependencies**
+    ```Bash
+    composer install
+    npm install
+    Konfigurasi Key Environment:
 3. **Konfigurasi Key Environment:**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   GEMINI_API_KEY
+    ```Bash
+    cp .env.example .env
+    php artisan key:generate
+Catatan: Jangan lupa untuk mengisi GEMINI_API_KEY di dalam file .env.
+
 4. **Database Migration & Seeding:**
-   ```bash
-   php artisan migrate --seed
+    ```Bash
+    php artisan migrate --seed
+    
 5. **Jalankan Aplikasi:**
-   ```bash
-   composer run dev
+    ```Bash
+    composer run dev
