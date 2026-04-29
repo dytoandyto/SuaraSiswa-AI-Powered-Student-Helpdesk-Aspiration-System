@@ -15,9 +15,7 @@ use Inertia\Inertia;
 
 class ChatbotController extends Controller
 {
-    // ===============================================
     // DASHBOARD ADMIN & FAQ MANAGEMENT
-    // ===============================================
     public function indexTiket()
     {
         $tikets = TiketBantuan::with('user')
@@ -94,9 +92,7 @@ class ChatbotController extends Controller
         return redirect()->back()->with('message', 'Ratusan FAQ berhasil di-import dari CSV!');
     }
 
-    // ===============================================
     // TARIK DATA FAQ UNTUK MENU KLIK DI WIDGET
-    // ===============================================
     public function getFaqs()
     {
         // Mengambil FAQ dan mengelompokkannya berdasarkan 'kategori'
@@ -104,9 +100,7 @@ class ChatbotController extends Controller
         return response()->json($faqs);
     }
 
-    // ===============================================
     // ENGINE CHATBOT (ANTI-SPAM TIKET)
-    // ===============================================
     public function handleChat(Request $request)
     {
         $request->validate(['pesan' => 'required|string|max:500']);
@@ -180,7 +174,6 @@ class ChatbotController extends Controller
             // JIKA DITOLAK GOOGLE (Status 400, 403, 500)
             throw new \Exception("DITOLAK GOOGLE (Status " . $response->status() . "): " . $response->body());
         } catch (\Exception $e) {
-            // Catat error aslinya secara diam-diam di log laravel
             Log::error('CHATBOT FAIL: ' . $e->getMessage());
 
             // Tampilkan pesan anggun ke siswa + Tombol Bikin Tiket
@@ -209,11 +202,7 @@ class ChatbotController extends Controller
             'reply' => "Sip! Pertanyaanmu sudah diteruskan ke Admin (Tiket #{$tiket->id}). Mohon tunggu balasannya di riwayat obrolan ini maksimal 1x24 jam ya."
         ]);
     }
-
-    // ===============================================
     // FLOW LAINNYA
-    // ===============================================
-
     public function laporAspirasi(Request $request)
     {
         // 1. Tambahkan 'tujuan' di validasi

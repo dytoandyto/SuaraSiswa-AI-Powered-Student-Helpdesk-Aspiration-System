@@ -17,8 +17,6 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => {
             <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
                 {children}
             </AppLayoutTemplate>
-
-            {/* Widget Chatbot*/}
             {auth?.user?.role === 'siswa' && <ChatbotWidget />}
         </>
     );

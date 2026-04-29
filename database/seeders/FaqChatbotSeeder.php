@@ -38,8 +38,8 @@ class FaqChatbotSeeder extends Seeder
             ['keyword' => 'ekskul', 'pertanyaan' => 'Apa saja pilihan ekskul?', 'jawaban' => 'Ada Pramuka (Wajib), OSIS, Paskibra, Futsal, Basket, Rohis, dan Coding Club.', 'kategori' => 'Kesiswaan'],
 
             // --- KATEGORI: PKL & PRAKERIN ---
-            ['keyword' => 'pkl kapan', 'pertanyaan' => 'Kapan pelaksanaan PKL?', 'jawaban' => 'PKL biasanya dilaksanakan di awal kelas XI selama 3 sampai 6 bulan.', 'kategori' => 'PKL'],
-            ['keyword' => 'syarat pkl', 'pertanyaan' => 'Apa syarat untuk bisa PKL?', 'jawaban' => 'Sudah menyelesaikan kompetensi dasar di kelas X dan tidak memiliki tunggakan nilai.', 'kategori' => 'PKL'],
+            ['keyword' => 'pkl kapan', 'pertanyaan' => 'Kapan pelaksanaan PKL?', 'jawaban' => 'PKL biasanya dilaksanakan di awal kelas XII selama 3 sampai 6 bulan.', 'kategori' => 'PKL'],
+            ['keyword' => 'syarat pkl', 'pertanyaan' => 'Apa syarat untuk bisa PKL?', 'jawaban' => 'Sudah menyelesaikan kompetensi dasar di kelas X dan XI dan tidak memiliki tunggakan nilai.', 'kategori' => 'PKL'],
             ['keyword' => 'cari tempat pkl', 'pertanyaan' => 'Apakah sekolah mencarikan tempat PKL?', 'jawaban' => 'Sekolah membantu menyalurkan, namun siswa sangat disarankan mencari mandiri sesuai minat.', 'kategori' => 'PKL'],
             ['keyword' => 'laporan pkl', 'pertanyaan' => 'Kapan batas pengumpulan laporan PKL?', 'jawaban' => 'Maksimal 2 minggu setelah masa PKL selesai untuk mendapatkan nilai sertifikat.', 'kategori' => 'PKL'],
 

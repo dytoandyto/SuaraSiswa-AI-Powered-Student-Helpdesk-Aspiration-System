@@ -17,9 +17,7 @@ class SiswaImport implements ToModel, WithHeadingRow, WithBatchInserts, WithChun
 
     public function __construct()
     {
-        // RAHASIA KECEPATAN: 
         // Kita enkripsi passwordnya CUKUP 1 KALI SAJA di sini pas awal jalan, 
-        // bukan 300 kali di dalam fungsi model()
         $this->defaultPassword = Hash::make('siswa123');
     }
 

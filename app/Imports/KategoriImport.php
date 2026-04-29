@@ -29,11 +29,11 @@ class KategoriImport implements ToModel, WithHeadingRow, WithBatchInserts, WithC
     }
     public function batchSize(): int
     {
-        return 500; 
+        return 100; 
     }
 
     public function chunkSize(): int
     {
-        return 500;
+        return 100;
     }
 }

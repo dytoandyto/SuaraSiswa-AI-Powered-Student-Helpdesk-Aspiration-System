@@ -22,7 +22,7 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
         e.preventDefault();
         post(route('aspirasi.store'), {
             preserveScroll: true,
-            preserveState: true, 
+            preserveState: true,
             onSuccess: () => {
                 // Form langsung dikosongkan setelah berhasil
                 reset('id_kategori', 'kategori_manual', 'lokasi', 'ket', 'judul', 'tujuan', 'tanggal_kejadian', 'lampiran');
@@ -40,7 +40,7 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
         e.preventDefault();
         patch(route('aspirasi.update', selectedAspirasi.id_aspirasi), {
             preserveScroll: true,
-            preserveState: true, 
+            preserveState: true,
             onSuccess: () => {
                 setIsModalOpen(false);
                 reset();
@@ -116,13 +116,20 @@ export default function Dashboard({ kategoris = [], aspirasis, stats, filters = 
                     )}
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                     {isStaff ? (
                         <>
                             <StatCard title="Total Masuk" value={stats.total} icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" color="bg-indigo-500" lightColor="bg-indigo-50 text-indigo-600" />
                             <StatCard title="Menunggu" value={stats.menunggu} icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" color="bg-amber-500" lightColor="bg-amber-50 text-amber-600" />
                             <StatCard title="Diproses" value={stats.proses} icon="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" color="bg-blue-500" lightColor="bg-blue-50 text-blue-600" />
                             <StatCard title="Selesai" value={stats.selesai} icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" color="bg-emerald-500" lightColor="bg-emerald-50 text-emerald-600" />
+                            <StatCard
+                                title="Kepuasan Siswa"
+                                value={`${stats['rata-rata-rating'] || '0.0'} / 5`}
+                                icon="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.89a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.89a1 1 0 00-1.175 0l-3.976 2.89c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 9.41c-.783-.57-.38-1.81.588-1.81h4.915a1 1 0 00.95-.69l1.519-4.674z"
+                                color="bg-amber-500"
+                                lightColor="bg-amber-50 text-amber-600"
+                            />
                         </>
 
                     ) : (

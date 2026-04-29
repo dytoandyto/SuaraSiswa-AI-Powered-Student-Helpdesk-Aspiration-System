@@ -8,41 +8,94 @@ export default function AdminView({ aspirasis, kategoris, filters, handleFilter,
     return (
         <div className="space-y-6">
             {/* Filter Form Toolbar */}
-            <form onSubmit={handleFilter} className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 no-print flex flex-col lg:flex-row gap-4 mb-4">
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto p-1.5 bg-slate-50/80 rounded-xl border border-slate-100">
-                    <select className="text-sm border-none bg-transparent focus:ring-0 cursor-pointer pr-6" value={isCustomDate ? 'rentang' : 'bulan'} onChange={(e) => setIsCustomDate(e.target.value === 'rentang')}>
-                        <option value="bulan">Per Bulan</option>
-                        <option value="rentang">Custom Tanggal</option>
-                    </select>
-                    <div className="h-6 w-px bg-slate-300 hidden sm:block"></div>
-                    {!isCustomDate ? (
-                        <input type="month" name="periode" defaultValue={filters.periode} className={inputClasses} />
-                    ) : (
-                        <div className="flex w-full sm:w-auto items-center gap-2">
-                            <input type="date" name="dari_tanggal" defaultValue={filters.dari_tanggal} className={`${inputClasses} px-2`} />
-                            <span className="text-slate-400 text-xs font-bold font-mono">S/D</span>
-                            <input type="date" name="sampai_tanggal" defaultValue={filters.sampai_tanggal} className={`${inputClasses} px-2`} />
-                        </div>
-                    )}
-                </div>
+            <form onSubmit={handleFilter} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 no-print mb-6">
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-end">
 
-                <div className="flex flex-col sm:flex-row gap-3 items-center w-full lg:flex-1">
-                    <div className="w-full sm:w-1/3 lg:w-48">
-                        <select name="kategori" defaultValue={filters.kategori} className={inputClasses}>
-                            <option value="">Semua Kategori</option>
-                            {kategoris.map((k: any) => <option key={k.id_kategori} value={k.id_kategori}>{k.ket_kategori}</option>)}
-                            <option value="manual">Lainnya</option>
-                        </select>
+                    {/* AREA 1: WAKTU (4 Kolom) */}
+                    <div className="xl:col-span-4 space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Periode Waktu</label>
+                        <div className="flex items-center gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-200/60">
+                            <select
+                                className="text-xs border-none bg-transparent focus:ring-0 cursor-pointer font-bold text-indigo-600"
+                                value={isCustomDate ? 'rentang' : 'bulan'}
+                                onChange={(e) => setIsCustomDate(e.target.value === 'rentang')}
+                            >
+                                <option value="bulan">📅 Bulan</option>
+                                <option value="rentang">🗓️ Rentang</option>
+                            </select>
+                            <div className="h-6 w-px bg-slate-300"></div>
+                            <div className="flex-1">
+                                {!isCustomDate ? (
+                                    <input type="month" name="periode" defaultValue={filters.periode} className="w-full bg-transparent border-none text-sm focus:ring-0 py-1" />
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <input type="date" name="dari_tanggal" defaultValue={filters.dari_tanggal} className="w-full bg-transparent border-none text-[11px] focus:ring-0 py-1 px-0" />
+                                        <span className="text-slate-300">-</span>
+                                        <input type="date" name="sampai_tanggal" defaultValue={filters.sampai_tanggal} className="w-full bg-transparent border-none text-[11px] focus:ring-0 py-1 px-0" />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
-                    <div className="w-full flex-1 flex gap-2">
-                        <input type="text" name="search" defaultValue={filters.search} placeholder="Cari Judul, Lokasi..." className={inputClasses} />
-                        <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm px-6 py-2.5">Terapkan</button>
-                        {(filters.search || filters.kategori || filters.periode || filters.dari_tanggal) && (
-                            <Link href="/dashboard" className="bg-slate-100 text-slate-500 rounded-xl p-2.5 flex items-center justify-center">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </Link>
-                        )}
+
+                    {/* AREA 2: KATEGORI & STATUS (4 Kolom) */}
+                    <div className="xl:col-span-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori</label>
+                                <select name="kategori" defaultValue={filters.kategori} className={`${inputClasses} !bg-slate-50`}>
+                                    <option value="">Semua Kategori</option>
+                                    {kategoris.map((k: any) => <option key={k.id_kategori} value={k.id_kategori}>{k.ket_kategori}</option>)}
+                                    <option value="manual">Lainnya</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status</label>
+                                <select name="status" defaultValue={filters.status} className={`${inputClasses} !bg-slate-50`}>
+                                    <option value="semua">Semua Status</option>
+                                    <option value="Menunggu">Menunggu</option>
+                                    <option value="Proses">Proses</option>
+                                    <option value="Selesai">Selesai</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* AREA 3: SEARCH & ACTION (4 Kolom) */}
+                    <div className="xl:col-span-4 space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kata Kunci</label>
+                        <div className="flex gap-2">
+                            <div className="relative flex-1">
+                                <input
+                                    type="text"
+                                    name="search"
+                                    defaultValue={filters.search}
+                                    placeholder="Cari laporan..."
+                                    className={`${inputClasses} !bg-slate-50 pl-10`}
+                                />
+                                <svg className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+
+                            <button type="submit" className="bg-slate-900 hover:bg-indigo-600 text-white rounded-xl font-bold text-xs px-5 py-2.5 transition-all shadow-sm active:scale-95">
+                                FILTER
+                            </button>
+
+                            {(filters.search || filters.kategori || filters.periode || filters.dari_tanggal || (filters.status && filters.status !== 'semua')) && (
+                                <Link
+                                    href="/dashboard"
+                                    className="bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-100 rounded-xl px-3 flex items-center justify-center transition-all shadow-sm"
+                                    title="Reset Filter"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </Link>
+                            )}
+                        </div>
+                    </div>
+
                 </div>
             </form>
 

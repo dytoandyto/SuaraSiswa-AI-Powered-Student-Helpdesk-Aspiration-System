@@ -26,12 +26,23 @@ class AspirasiController extends Controller
             $query->where('tujuan', strtoupper($user->role));
         }
 
+        // --- PINDAHKAN PENCARIAN KE SINI (AGAR STATISTIK IKUT TER-FILTER) ---
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('judul', 'like', "%{$search}%")
+                    ->orWhere('lokasi', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($qUser) use ($search) {
+                        $qUser->where('nama', 'like', "%{$search}%")
+                            ->orWhere('username', 'like', "%{$search}%");
+                    });
+            });
+        }
+
         // -> Logika Cabang Pintar: Filter Rentang Tanggal ATAU Periode Bulan
         if ($request->filled('dari_tanggal') && $request->filled('sampai_tanggal')) {
-            // Jika user memilih filter dari tanggal X sampai tanggal Y
             $query->whereBetween('tanggal_kejadian', [$request->dari_tanggal, $request->sampai_tanggal]);
         } elseif ($request->filled('periode')) {
-            // Jika user hanya memilih filter Bulan (Contoh: 2026-04)
             $tahun = substr($request->periode, 0, 4);
             $bulan = substr($request->periode, 5, 2);
             $query->whereYear('tanggal_kejadian', $tahun)
@@ -47,7 +58,13 @@ class AspirasiController extends Controller
             }
         }
 
-        // 2. HITUNG KARTU STATISTIK 
+        // Filter status
+        if ($request->filled('status') && $request->status !== 'semua') {
+            $query->where('status', $request->status);
+        }
+
+        // 2. HITUNG KARTU STATISTIK (DILAKUKAN SETELAH SEMUA FILTER DIAPLIKASIKAN)
+        // clone $query di sini akan membawa semua filter di atas, termasuk search
         $statusTerakhir = '-';
         if ($user->role === 'siswa') {
             $laporanTerbaru = (clone $query)->latest('created_at')->first();
@@ -55,6 +72,7 @@ class AspirasiController extends Controller
                 $statusTerakhir = $laporanTerbaru->status;
             }
         }
+
         $rataRating = (clone $query)->whereNotNull('rating')->avg('rating');
 
         $stats = [
@@ -62,24 +80,13 @@ class AspirasiController extends Controller
             'menunggu' => (clone $query)->where('status', 'Menunggu')->count(),
             'proses' => (clone $query)->where('status', 'Proses')->count(),
             'selesai' => (clone $query)->where('status', 'Selesai')->count(),
+            'rata-rata-rating' => number_format($rataRating ?: 0, 1),
+            'rating_terbaik' => (clone $query)->max('rating') ?? 0,
             'terakhir' => $statusTerakhir,
-            'kepuasan' => number_format($rataRating, 1) ?? '0.0', // Format 4.5, 5.0, dll
+            'kepuasan' => number_format($rataRating ?: 0, 1),
         ];
 
-        // 3. PENCARIAN & PAGINASI
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('judul', 'like', "%{$search}%")
-                    ->orWhere('lokasi', 'like', "%{$search}%")
-                    ->orWhereHas('user', function ($qUser) use ($search) {
-                        $qUser->where('nama', 'like', "%{$search}%")
-                            ->orWhere('username', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        // PERBAIKAN: Ubah menjadi created_at agar yang terbaru kirim ada di atas
+        // 3. PAGINASI (HASIL AKHIR)
         $aspirasis = $query->with(['user', 'kategori'])
             ->orderBy('created_at', 'desc')
             ->paginate(10)
@@ -89,7 +96,7 @@ class AspirasiController extends Controller
             'aspirasis' => $aspirasis,
             'kategoris' => Kategori::all(),
             'stats' => $stats,
-            'filters' => $request->only(['search', 'kategori', 'periode', 'dari_tanggal', 'sampai_tanggal']),
+            'filters' => $request->only(['search', 'kategori', 'periode', 'dari_tanggal', 'sampai_tanggal', 'status']),
         ]);
     }
 
@@ -129,20 +136,19 @@ class AspirasiController extends Controller
         return redirect()->back()->with('message', 'Aspirasi berhasil dikirim dengan lampiran!');
     }
 
-   public function update(Request $request, $id)
+    public function update(Request $request, $id)
     {
         if (Auth::user()->role === 'siswa') {
             abort(403, 'Akses Ditolak!');
         }
 
         // 1. Ambil data aspirasi saat ini dari database
-        // Gunakan \App\Models\Aspirasi atau DB::table('aspirasi')
         $aspirasi = Aspirasi::findOrFail($id);
         $statusSaatIni = $aspirasi->status;
         $statusBaru = $request->status;
 
         // 2. LOGIKA PENCEGAHAN (GUARD CLAUSE)
-        
+
         // A. Jika sudah SELESAI, tidak boleh diubah ke apapun lagi
         if ($statusSaatIni === 'Selesai') {
             return redirect()->back()->with('error', 'Laporan sudah Selesai dan tidak bisa diubah kembali.');
@@ -160,10 +166,9 @@ class AspirasiController extends Controller
         ]);
 
         // 4. EKSEKUSI STORED PROCEDURE
-        // Hanya dijalankan jika lolos pengecekan di atas
         DB::statement("CALL update_status_aspirasi(?, ?, ?)", [
             $id,
-            $statusBaru,   
+            $statusBaru,
             $request->feedback
         ]);
 
@@ -219,7 +224,7 @@ class AspirasiController extends Controller
             }
         }
 
-        // PERBAIKAN: Ubah menjadi created_at desc agar urutan hasil cetak selaras dengan dashboard
+
         $aspirasis = $query->orderBy('created_at', 'desc')->get();
 
         return view('cetak-laporan', compact('aspirasis', 'request', 'user'));

@@ -6,7 +6,6 @@ export default function ChatbotInterface({ isFullPage = false }: { isFullPage?: 
     const [inputText, setInputText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
 
-    // STATE MACHINE UNTUK FLOW
     // Tambahan step: form_tujuan (Untuk memilih staf)
     const [conversationStep, setConversationStep] = useState('menu_utama');
     const [tempForm, setTempForm] = useState<any>({ judul: '', kategori: '', tujuan: '', lokasi: '', ket: '' });
@@ -22,9 +21,7 @@ export default function ChatbotInterface({ isFullPage = false }: { isFullPage?: 
 
     useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-    // ==========================================
     // SISTEM VALIDASI ANTI-ISENG (SPAM GUARD)
-    // ==========================================
     const isSpamOrInvalid = (text: string) => {
         const trimmed = text.trim();
         // 1. Cek jika terlalu pendek (kurang dari 5 karakter)
@@ -34,7 +31,7 @@ export default function ChatbotInterface({ isFullPage = false }: { isFullPage?: 
         if (/^(.)\1{4,}$/.test(trimmed)) return "Jangan mengetik karakter berulang secara iseng ya.";
 
         // 3. Cek kata kasar (Filter Dasar - Bisa kamu tambahkan sendiri)
-        const badWords = ['anjing', 'babi', 'bangsat', 'goblok', 'tolol', 'idiot', 'sialan', 'brengsek', 'kontol', 'memek', 'bajingan', 'jancok', 'bacot', 'setan', 'brengsek', 'tai', 'lonte', 'pelacur', 'lc', 'gblk', 'bgsd', 'ajg'];
+        const badWords = ['anjing', 'babi', 'bangsat', 'goblok', 'tolol', 'idiot', 'sialan', 'brengsek', 'kontol', 'memek', 'bajingan', 'jancok', 'bacot', 'setan', 'brengsek', 'tai', 'lonte', 'lc', 'gblk', 'bgsd', 'ajg'];
         if (badWords.some(word => trimmed.toLowerCase().includes(word))) {
             return "Mohon gunakan bahasa yang sopan. Laporan ini akan dibaca langsung oleh Staf Sekolah.";
         }
@@ -42,9 +39,7 @@ export default function ChatbotInterface({ isFullPage = false }: { isFullPage?: 
         return false; // Berarti valid
     };
 
-    // ==========================================
     // FUNGSI SUBMIT ASPIRASI
-    // ==========================================
     const submitAspirasiChat = async (file: File | null = null) => {
         setIsTyping(true);
         try {
@@ -74,9 +69,7 @@ export default function ChatbotInterface({ isFullPage = false }: { isFullPage?: 
         }
     };
 
-    // ==========================================
     // LOGIKA PERCABANGAN (HANDLE INPUT)
-    // ==========================================
     const handleChatAction = async (text: string) => {
         setIsTyping(true);
         setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text: text, type: 'text' }]);
