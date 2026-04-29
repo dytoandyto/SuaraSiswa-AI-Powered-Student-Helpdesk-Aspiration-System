@@ -48,9 +48,9 @@ Agar tampilan tidak terlalu besar, gambar di bawah ini telah disesuaikan ukurann
 | :---: | :---: |
 | <img src="https://github.com/user-attachments/assets/baacf093-87ff-4748-bbc6-cf8dbdd459fb" width="300" /> | <img src="https://github.com/user-attachments/assets/23cdb9c7-0c5c-4ad5-9723-6c4536b4c63d" width="300" /> |
 
-| **Manajemen Aspirasi (Admin)** | **Fitur Rating & Feedback** |
+| **Manajemen Aspirasi (Admin)** |
 | :---: | :---: |
-| <img src="https://github.com/user-attachments/assets/f97439f7-806a-4b5e-b7f8-87fcb06a2ea0" width="300" /> | *(Tambahkan SS Rating Jika Ada)* |
+| <img src="https://github.com/user-attachments/assets/f97439f7-806a-4b5e-b7f8-87fcb06a2ea0" width="300" /> |
 
 ---
 
